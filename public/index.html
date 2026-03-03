@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LinguaLand - English Learning for Kids</title>
-  <meta name="description" content="Fun English learning platform for Class 1 with AR, games, and vocabulary." />
+  <title>Học tiếng Anh lớp 1</title>
+  <meta name="description" content="Học tiếng Anh với kho từ vựng phong phú, các trò chơi và thực tế ảo tăng cường (AR)." />
   <meta name="theme-color" content="#FF6B35" />
 
   <!-- Tailwind CSS CDN -->
@@ -132,7 +132,7 @@
             Learn English<br/>the <span class="text-brand">Fun</span> Way!
           </h1>
           <p class="mt-4 text-lg text-bark/70 font-semibold max-w-md mx-auto md:mx-0">
-            Interactive vocabulary, exciting games, and magical AR adventures made for Class 1 learners.
+            Khám phá từ vựng sinh động, trò chơi hấp dẫn và chuyến phiêu lưu AR nhiệm màu dành riêng cho các bạn nhỏ lớp 1.
           </p>
           <div class="mt-8 flex flex-wrap gap-3 justify-center md:justify-start">
             <button onclick="go('games')" class="px-6 py-3 bg-brand text-white font-bold rounded-full shadow-lg shadow-brand/30 hover:shadow-brand/50 transition text-lg">
@@ -165,15 +165,15 @@
         </div>
         <div onclick="go('ar')" class="game-card cursor-pointer bg-white rounded-2xl p-6 border-2 border-sunny/40 text-center">
           <img src="images/ar-experience.jpg" alt="AR experience" class="rounded-xl w-full h-40 object-cover mb-4" />
-          <h3 class="font-display text-xl font-bold text-bark">AR Magic</h3>
-          <p class="text-bark/60 mt-1 text-sm font-semibold">Point your camera &amp; learn</p>
+          <h3 class="font-display text-xl font-bold text-bark">AR nhiệm màu</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Đặt camera của bạn &amp; học</p>
         </div>
       </div>
     </div>
 
     <!-- Alphabet Parade -->
     <div class="max-w-5xl mx-auto px-4 pb-16">
-      <h2 class="font-display text-3xl font-bold text-center text-bark mb-6">Tap a Letter!</h2>
+      <h2 class="font-display text-3xl font-bold text-center text-bark mb-6">Chạm một chữ cái!</h2>
       <div class="flex flex-wrap justify-center gap-3" id="alphabet-parade"></div>
     </div>
   </section>
@@ -181,16 +181,16 @@
   <!-- ===================== VOCABULARY ===================== -->
   <section id="sec-vocabulary" class="section">
     <div class="max-w-5xl mx-auto px-4 py-10">
-      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Back Home</button>
-      <h1 class="font-display text-3xl font-bold text-bark mb-2">Vocabulary Explorer</h1>
-      <p class="text-bark/60 font-semibold mb-8">Pick a category and flip the cards to learn new words!</p>
+      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Trở về</button>
+      <h1 class="font-display text-3xl font-bold text-bark mb-2">Cuộc phiêu lưu từ vựng</h1>
+      <p class="text-bark/60 font-semibold mb-8">Chọn một chủ đề và lật thẻ để học từ mới!</p>
 
       <!-- Category Tabs -->
       <div class="flex flex-wrap gap-2 mb-8" id="vocab-tabs"></div>
 
       <!-- Flashcard Area -->
       <div class="flex flex-col items-center" id="flashcard-area">
-        <p class="text-bark/50 text-lg font-semibold">Choose a category above to start!</p>
+        <p class="text-bark/50 text-lg font-semibold">Chọn một chủ đề để bắt đầu!</p>
       </div>
     </div>
   </section>
@@ -198,26 +198,26 @@
   <!-- ===================== GAMES ===================== -->
   <section id="sec-games" class="section">
     <div class="max-w-5xl mx-auto px-4 py-10">
-      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Back Home</button>
-      <h1 class="font-display text-3xl font-bold text-bark mb-2">Game Zone</h1>
-      <p class="text-bark/60 font-semibold mb-8">Pick a game and have fun learning!</p>
+      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Trở về</button>
+      <h1 class="font-display text-3xl font-bold text-bark mb-2">Khu trò chơi</h1>
+      <p class="text-bark/60 font-semibold mb-8">Chọn một trò chơi và học vui vẻ!</p>
 
       <!-- Game Picker -->
       <div id="game-picker" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div onclick="startGame('match')"   class="game-card cursor-pointer bg-white rounded-2xl p-8 border-2 border-brand/20 text-center">
           <div class="text-5xl mb-3">&#129513;</div>
-          <h3 class="font-display text-xl font-bold text-bark">Word Match</h3>
-          <p class="text-bark/60 mt-1 text-sm font-semibold">Find matching pairs</p>
+          <h3 class="font-display text-xl font-bold text-bark">Ghép chữ</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Tìm kiếm cặp thẻ trùng để ghép</p>
         </div>
         <div onclick="startGame('spell')"   class="game-card cursor-pointer bg-white rounded-2xl p-8 border-2 border-teal/20 text-center">
           <div class="text-5xl mb-3">&#9999;&#65039;</div>
-          <h3 class="font-display text-xl font-bold text-bark">Spell It Out</h3>
-          <p class="text-bark/60 mt-1 text-sm font-semibold">Arrange the letters</p>
+          <h3 class="font-display text-xl font-bold text-bark">Hãy đánh vần!</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Sắp xếp các chữ cái</p>
         </div>
         <div onclick="startGame('quiz')"    class="game-card cursor-pointer bg-white rounded-2xl p-8 border-2 border-sunny/40 text-center">
           <div class="text-5xl mb-3">&#127942;</div>
-          <h3 class="font-display text-xl font-bold text-bark">Picture Quiz</h3>
-          <p class="text-bark/60 mt-1 text-sm font-semibold">Choose the right word</p>
+          <h3 class="font-display text-xl font-bold text-bark">Câu đố hình</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Chọn từ đúng</p>
         </div>
       </div>
 
@@ -229,26 +229,26 @@
   <!-- ===================== AR MAGIC ===================== -->
   <section id="sec-ar" class="section">
     <div class="max-w-5xl mx-auto px-4 py-10">
-      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Back Home</button>
-      <h1 class="font-display text-3xl font-bold text-bark mb-2">AR Magic</h1>
+      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Trở về</button>
+      <h1 class="font-display text-3xl font-bold text-bark mb-2">AR nhiệm màu</h1>
       <p class="text-bark/60 font-semibold mb-6">
-        Point your camera at a <strong>Hiro marker</strong> to see 3D vocabulary words appear!
-        You can print one from
-        <a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank" class="text-brand underline">here</a>.
+        Đặt camera của bạn tại <strong>Hiro marker</strong> để xem từ vựng 3D xuất hiện!
+        Bạn có thể in nó ở
+        <a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank" class="text-brand underline">đây</a>.
       </p>
 
       <div class="flex flex-col sm:flex-row gap-6 items-start">
         <!-- AR Info Panel -->
         <div class="flex-1 bg-white rounded-2xl border-2 border-orange-100 p-6">
-          <h3 class="font-display text-lg font-bold text-bark mb-3">How it works</h3>
+          <h3 class="font-display text-lg font-bold text-bark mb-3">Cách thức hoạt động</h3>
           <ol class="list-decimal list-inside space-y-2 text-bark/70 font-semibold text-sm">
-            <li>Print or open the <strong>Hiro marker</strong> on another screen.</li>
-            <li>Click "Launch AR Camera" below.</li>
-            <li>Point your camera at the marker.</li>
-            <li>A 3D word &amp; its image will appear!</li>
+            <li>In hoặc mở <strong>Hiro marker</strong> trên màn hình điện thoại/máy tính khác.</li>
+            <li>Bấm "Khởi chạy Camera AR"</li>
+            <li>Đặt camera tại ảnh Hiro.</li>
+            <li>Một từ 3D &amp; ảnh của nó sẽ xuất hiện!</li>
           </ol>
           <button onclick="launchAR()" class="mt-6 w-full py-3 bg-brand text-white font-bold rounded-full shadow-lg shadow-brand/30 text-lg transition hover:shadow-brand/50">
-            Launch AR Camera
+            Khởi chạy Camera AR
           </button>
 
           <!--
@@ -269,15 +269,15 @@
 
         <!-- Word List for AR -->
         <div class="flex-1 bg-white rounded-2xl border-2 border-teal/20 p-6">
-          <h3 class="font-display text-lg font-bold text-bark mb-3">Words in AR</h3>
-          <p class="text-bark/50 text-sm font-semibold mb-3">These words will show on the Hiro marker:</p>
+          <h3 class="font-display text-lg font-bold text-bark mb-3">Từ trong AR</h3>
+          <p class="text-bark/50 text-sm font-semibold mb-3">Những từ sẽ được xuất hiện trên Hiro Marker:</p>
           <div class="grid grid-cols-3 gap-2" id="ar-word-list"></div>
         </div>
       </div>
 
       <!-- Fallback "Simulated AR" for devices without camera -->
       <div class="mt-10 bg-white rounded-2xl border-2 border-sunny/40 p-6">
-        <h3 class="font-display text-lg font-bold text-bark mb-3">No camera? Try Simulated AR!</h3>
+        <h3 class="font-display text-lg font-bold text-bark mb-3">Không có camera? Thử AR giả lập!</h3>
         <p class="text-bark/60 text-sm font-semibold mb-4">Tap the floating words below to capture them.</p>
         <div id="sim-ar" class="relative w-full h-72 bg-gradient-to-br from-teal/10 to-brand/10 rounded-xl overflow-hidden border border-orange-100">
           <!-- Scanning corners -->
