@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinguaLand - English Learning for Kids</title>
+  <meta name="description" content="Fun English learning platform for Class 1 with AR, games, and vocabulary." />
+  <meta name="theme-color" content="#FF6B35" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#FF6B35',
+            sunny: '#FFE66D',
+            teal:  '#4ECDC4',
+            coral: '#FF6B6B',
+            cream: '#FFF9F0',
+            bark:  '#2D1B0E',
+          },
+          fontFamily: {
+            display: ['"Baloo 2"', 'cursive'],
+            body:    ['Nunito', 'sans-serif'],
+          },
+          borderRadius: { xl: '1rem', '2xl': '1.25rem', '3xl': '1.5rem' },
+        },
+      },
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- AR.js + A-Frame (loaded but hidden until AR section is active) -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Nunito', sans-serif; background: #FFF9F0; color: #2D1B0E; margin: 0; }
+    .font-display { font-family: 'Baloo 2', cursive; }
+
+    /* Animations */
+    @keyframes float   { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-12px) } }
+    @keyframes bounce  { 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.12) } }
+    @keyframes wiggle  { 0%,100%{ transform:rotate(0) } 25%{ transform:rotate(-4deg) } 75%{ transform:rotate(4deg) } }
+    @keyframes fadeUp  { from{ opacity:0;transform:translateY(24px) } to{ opacity:1;transform:translateY(0) } }
+    @keyframes pop     { 0%{ transform:scale(0) } 70%{ transform:scale(1.15) } 100%{ transform:scale(1) } }
+    @keyframes confetti { 0%{ opacity:1;transform:translateY(0) rotate(0) } 100%{ opacity:0;transform:translateY(-120px) rotate(360deg) } }
+    .anim-float  { animation: float 3s ease-in-out infinite; }
+    .anim-bounce { animation: bounce 1.5s ease-in-out infinite; }
+    .anim-wiggle { animation: wiggle 1s ease-in-out infinite; }
+    .anim-fadeUp { animation: fadeUp .5s ease-out both; }
+    .anim-pop    { animation: pop .4s ease-out both; }
+
+    /* Hide all sections except the active one */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Flashcard flip */
+    .flashcard { perspective: 600px; cursor: pointer; }
+    .flashcard-inner { transition: transform .5s; transform-style: preserve-3d; position: relative; }
+    .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+    .flashcard-front, .flashcard-back { backface-visibility: hidden; position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 1.25rem; }
+    .flashcard-back { transform: rotateY(180deg); }
+
+    /* Game card */
+    .game-card { transition: transform .2s, box-shadow .2s; }
+    .game-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+
+    /* Letter button */
+    .letter-btn { transition: transform .15s, background .15s; }
+    .letter-btn:active { transform: scale(.9); }
+
+    /* Progress bar fill */
+    .progress-fill { transition: width .6s ease-out; }
+
+    /* AR overlay */
+    #ar-overlay { position: fixed; inset: 0; z-index: 100; background: #000; }
+    #ar-overlay a-scene { width: 100%; height: 100%; }
+
+    /* Confetti piece */
+    .confetti-piece {
+      position: fixed; width: 10px; height: 10px; border-radius: 2px;
+      animation: confetti 1.2s ease-out forwards; pointer-events: none; z-index: 999;
+    }
+
+    /* Nav active pill */
+    .nav-btn.active { background: #FF6B35; color: #fff; }
+  </style>
+</head>
+
+<body class="min-h-screen">
+
+  <!-- ===================== NAVIGATION ===================== -->
+  <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-orange-100 shadow-sm">
+    <div class="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
+      <button onclick="go('home')" class="flex items-center gap-2 cursor-pointer">
+        <span class="text-3xl">&#127775;</span>
+        <span class="font-display text-2xl font-bold text-brand">LinguaLand</span>
+      </button>
+      <div class="flex gap-2 flex-wrap">
+        <button onclick="go('home')"       class="nav-btn active px-3 py-1.5 rounded-full text-sm font-bold transition" data-nav="home">Home</button>
+        <button onclick="go('vocabulary')"  class="nav-btn px-3 py-1.5 rounded-full text-sm font-bold bg-orange-50 text-bark transition" data-nav="vocabulary">Vocabulary</button>
+        <button onclick="go('games')"       class="nav-btn px-3 py-1.5 rounded-full text-sm font-bold bg-orange-50 text-bark transition" data-nav="games">Games</button>
+        <button onclick="go('ar')"          class="nav-btn px-3 py-1.5 rounded-full text-sm font-bold bg-orange-50 text-bark transition" data-nav="ar">AR Magic</button>
+        <button onclick="go('progress')"    class="nav-btn px-3 py-1.5 rounded-full text-sm font-bold bg-orange-50 text-bark transition" data-nav="progress">Progress</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===================== HOME ===================== -->
+  <section id="sec-home" class="section active">
+    <div class="relative overflow-hidden bg-gradient-to-b from-orange-50 to-cream">
+      <!-- Floating letters background -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <span class="absolute text-6xl font-display font-bold text-brand/10 anim-float" style="top:10%;left:8%;animation-delay:0s">A</span>
+        <span class="absolute text-5xl font-display font-bold text-teal/10 anim-float"  style="top:25%;left:75%;animation-delay:.4s">B</span>
+        <span class="absolute text-7xl font-display font-bold text-sunny/30 anim-float" style="top:55%;left:18%;animation-delay:.8s">C</span>
+        <span class="absolute text-4xl font-display font-bold text-coral/10 anim-float" style="top:15%;left:55%;animation-delay:1.2s">D</span>
+        <span class="absolute text-6xl font-display font-bold text-teal/10 anim-float"  style="top:65%;left:70%;animation-delay:.6s">E</span>
+      </div>
+
+      <div class="relative max-w-5xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10">
+        <div class="flex-1 text-center md:text-left">
+          <h1 class="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-bark leading-tight">
+            Learn English<br/>the <span class="text-brand">Fun</span> Way!
+          </h1>
+          <p class="mt-4 text-lg text-bark/70 font-semibold max-w-md mx-auto md:mx-0">
+            Interactive vocabulary, exciting games, and magical AR adventures made for Class 1 learners.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-3 justify-center md:justify-start">
+            <button onclick="go('games')" class="px-6 py-3 bg-brand text-white font-bold rounded-full shadow-lg shadow-brand/30 hover:shadow-brand/50 transition text-lg">
+              Play Games
+            </button>
+            <button onclick="go('vocabulary')" class="px-6 py-3 bg-teal text-white font-bold rounded-full shadow-lg shadow-teal/30 hover:shadow-teal/50 transition text-lg">
+              Learn Words
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 max-w-sm">
+          <img src="images/hero-kids.jpg" alt="Happy kids learning English with floating letters" class="rounded-3xl shadow-2xl w-full anim-float" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="max-w-5xl mx-auto px-4 py-16">
+      <h2 class="font-display text-3xl font-bold text-center text-bark mb-10">Choose Your Adventure</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div onclick="go('vocabulary')" class="game-card cursor-pointer bg-white rounded-2xl p-6 border-2 border-orange-100 text-center">
+          <img src="images/vocabulary.jpg" alt="Vocabulary flashcards" class="rounded-xl w-full h-40 object-cover mb-4" />
+          <h3 class="font-display text-xl font-bold text-bark">Vocabulary</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Flashcards with pictures &amp; sound</p>
+        </div>
+        <div onclick="go('games')" class="game-card cursor-pointer bg-white rounded-2xl p-6 border-2 border-teal/20 text-center">
+          <img src="images/games-fun.jpg" alt="Fun word games" class="rounded-xl w-full h-40 object-cover mb-4" />
+          <h3 class="font-display text-xl font-bold text-bark">Games</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Match, spell &amp; quiz challenges</p>
+        </div>
+        <div onclick="go('ar')" class="game-card cursor-pointer bg-white rounded-2xl p-6 border-2 border-sunny/40 text-center">
+          <img src="images/ar-experience.jpg" alt="AR experience" class="rounded-xl w-full h-40 object-cover mb-4" />
+          <h3 class="font-display text-xl font-bold text-bark">AR Magic</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Point your camera &amp; learn</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alphabet Parade -->
+    <div class="max-w-5xl mx-auto px-4 pb-16">
+      <h2 class="font-display text-3xl font-bold text-center text-bark mb-6">Tap a Letter!</h2>
+      <div class="flex flex-wrap justify-center gap-3" id="alphabet-parade"></div>
+    </div>
+  </section>
+
+  <!-- ===================== VOCABULARY ===================== -->
+  <section id="sec-vocabulary" class="section">
+    <div class="max-w-5xl mx-auto px-4 py-10">
+      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Back Home</button>
+      <h1 class="font-display text-3xl font-bold text-bark mb-2">Vocabulary Explorer</h1>
+      <p class="text-bark/60 font-semibold mb-8">Pick a category and flip the cards to learn new words!</p>
+
+      <!-- Category Tabs -->
+      <div class="flex flex-wrap gap-2 mb-8" id="vocab-tabs"></div>
+
+      <!-- Flashcard Area -->
+      <div class="flex flex-col items-center" id="flashcard-area">
+        <p class="text-bark/50 text-lg font-semibold">Choose a category above to start!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== GAMES ===================== -->
+  <section id="sec-games" class="section">
+    <div class="max-w-5xl mx-auto px-4 py-10">
+      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Back Home</button>
+      <h1 class="font-display text-3xl font-bold text-bark mb-2">Game Zone</h1>
+      <p class="text-bark/60 font-semibold mb-8">Pick a game and have fun learning!</p>
+
+      <!-- Game Picker -->
+      <div id="game-picker" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div onclick="startGame('match')"   class="game-card cursor-pointer bg-white rounded-2xl p-8 border-2 border-brand/20 text-center">
+          <div class="text-5xl mb-3">&#129513;</div>
+          <h3 class="font-display text-xl font-bold text-bark">Word Match</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Find matching pairs</p>
+        </div>
+        <div onclick="startGame('spell')"   class="game-card cursor-pointer bg-white rounded-2xl p-8 border-2 border-teal/20 text-center">
+          <div class="text-5xl mb-3">&#9999;&#65039;</div>
+          <h3 class="font-display text-xl font-bold text-bark">Spell It Out</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Arrange the letters</p>
+        </div>
+        <div onclick="startGame('quiz')"    class="game-card cursor-pointer bg-white rounded-2xl p-8 border-2 border-sunny/40 text-center">
+          <div class="text-5xl mb-3">&#127942;</div>
+          <h3 class="font-display text-xl font-bold text-bark">Picture Quiz</h3>
+          <p class="text-bark/60 mt-1 text-sm font-semibold">Choose the right word</p>
+        </div>
+      </div>
+
+      <!-- Game Board (hidden until a game starts) -->
+      <div id="game-board" class="hidden"></div>
+    </div>
+  </section>
+
+  <!-- ===================== AR MAGIC ===================== -->
+  <section id="sec-ar" class="section">
+    <div class="max-w-5xl mx-auto px-4 py-10">
+      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Back Home</button>
+      <h1 class="font-display text-3xl font-bold text-bark mb-2">AR Magic</h1>
+      <p class="text-bark/60 font-semibold mb-6">
+        Point your camera at a <strong>Hiro marker</strong> to see 3D vocabulary words appear!
+        You can print one from
+        <a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank" class="text-brand underline">here</a>.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-6 items-start">
+        <!-- AR Info Panel -->
+        <div class="flex-1 bg-white rounded-2xl border-2 border-orange-100 p-6">
+          <h3 class="font-display text-lg font-bold text-bark mb-3">How it works</h3>
+          <ol class="list-decimal list-inside space-y-2 text-bark/70 font-semibold text-sm">
+            <li>Print or open the <strong>Hiro marker</strong> on another screen.</li>
+            <li>Click "Launch AR Camera" below.</li>
+            <li>Point your camera at the marker.</li>
+            <li>A 3D word &amp; its image will appear!</li>
+          </ol>
+          <button onclick="launchAR()" class="mt-6 w-full py-3 bg-brand text-white font-bold rounded-full shadow-lg shadow-brand/30 text-lg transition hover:shadow-brand/50">
+            Launch AR Camera
+          </button>
+
+          <!--
+            ===============================================
+            YOUR CUSTOM AR SCENE GOES HERE
+            ===============================================
+            Replace or extend the <a-scene> inside launchAR()
+            in the <script> at the bottom of this file.
+
+            Example with your own images:
+              <a-marker preset="hiro">
+                <a-image src="cat.png" position="0 0.5 0" scale="1 1 1"></a-image>
+                <a-text value="CAT" position="0 1.2 0" color="#FF6B35" align="center"></a-text>
+              </a-marker>
+            ===============================================
+          -->
+        </div>
+
+        <!-- Word List for AR -->
+        <div class="flex-1 bg-white rounded-2xl border-2 border-teal/20 p-6">
+          <h3 class="font-display text-lg font-bold text-bark mb-3">Words in AR</h3>
+          <p class="text-bark/50 text-sm font-semibold mb-3">These words will show on the Hiro marker:</p>
+          <div class="grid grid-cols-3 gap-2" id="ar-word-list"></div>
+        </div>
+      </div>
+
+      <!-- Fallback "Simulated AR" for devices without camera -->
+      <div class="mt-10 bg-white rounded-2xl border-2 border-sunny/40 p-6">
+        <h3 class="font-display text-lg font-bold text-bark mb-3">No camera? Try Simulated AR!</h3>
+        <p class="text-bark/60 text-sm font-semibold mb-4">Tap the floating words below to capture them.</p>
+        <div id="sim-ar" class="relative w-full h-72 bg-gradient-to-br from-teal/10 to-brand/10 rounded-xl overflow-hidden border border-orange-100">
+          <!-- Scanning corners -->
+          <div class="absolute top-2 left-2 w-8 h-8 border-t-3 border-l-3 border-brand rounded-tl-lg"></div>
+          <div class="absolute top-2 right-2 w-8 h-8 border-t-3 border-r-3 border-brand rounded-tr-lg"></div>
+          <div class="absolute bottom-2 left-2 w-8 h-8 border-b-3 border-l-3 border-brand rounded-bl-lg"></div>
+          <div class="absolute bottom-2 right-2 w-8 h-8 border-b-3 border-r-3 border-brand rounded-br-lg"></div>
+          <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-brand/80 text-white text-xs font-bold px-3 py-1 rounded-full">TAP TO CAPTURE</div>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2" id="captured-words"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PROGRESS ===================== -->
+  <section id="sec-progress" class="section">
+    <div class="max-w-5xl mx-auto px-4 py-10">
+      <button onclick="go('home')" class="text-brand font-bold mb-4 inline-block">&larr; Back Home</button>
+      <h1 class="font-display text-3xl font-bold text-bark mb-2">My Progress</h1>
+      <p class="text-bark/60 font-semibold mb-8">See how far you have come!</p>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10" id="stats-grid"></div>
+
+      <!-- Category Progress -->
+      <h2 class="font-display text-xl font-bold text-bark mb-4">Category Progress</h2>
+      <div class="space-y-4 mb-10" id="cat-progress"></div>
+
+      <!-- Achievements -->
+      <h2 class="font-display text-xl font-bold text-bark mb-4">Achievements</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="achievements"></div>
+    </div>
+  </section>
+
+  <!-- ===================== AR OVERLAY (created dynamically) ===================== -->
+  <div id="ar-overlay" class="hidden">
+    <button onclick="closeAR()" style="position:fixed;top:16px;right:16px;z-index:200;background:#FF6B35;color:#fff;border:none;border-radius:9999px;padding:10px 20px;font-weight:700;font-family:'Nunito';cursor:pointer;font-size:14px;">
+      Close AR
+    </button>
+    <div id="ar-scene-container">
+      <!--
+        ==========================================================
+        YOUR <a-scene> IS INSERTED HERE BY launchAR()
+        ==========================================================
+        To customize: edit the launchAR() function in the script
+        below. Add your own <a-marker> elements with your local
+        images like cat.png, dog.png, etc.
+        ==========================================================
+      -->
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- ===================== ALL JAVASCRIPT BELOW ====================== -->
+  <!-- ================================================================= -->
+  <script>
+    // ========================== DATA ==========================
+
+    const VOCAB = {
+      animals: {
+        label: 'Animals', icon: '&#128049;', color: 'brand',
+        words: [
+          { word:'Cat',    img:'cat.png',    hint:'Says meow' },
+          { word:'Dog',    img:'dog.png',    hint:'Says woof' },
+          { word:'Bird',   img:'bird.png',   hint:'Can fly' },
+          { word:'Fish',   img:'fish.png',   hint:'Lives in water' },
+          { word:'Frog',   img:'frog.png',   hint:'Jumps and ribbits' },
+          { word:'Hen',    img:'hen.png',    hint:'Lays eggs' },
+          { word:'Cow',    img:'cow.png',    hint:'Says moo' },
+          { word:'Pig',    img:'pig.png',    hint:'Says oink' },
+        ]
+      },
+      colors: {
+        label: 'Colors', icon: '&#127912;', color: 'teal',
+        words: [
+          { word:'Red',    img:'red.png',    hint:'Color of an apple' },
+          { word:'Blue',   img:'blue.png',   hint:'Color of the sky' },
+          { word:'Green',  img:'green.png',  hint:'Color of grass' },
+          { word:'Yellow', img:'yellow.png', hint:'Color of the sun' },
+          { word:'Pink',   img:'pink.png',   hint:'Color of a rose' },
+          { word:'Orange', img:'orange.png', hint:'Color of a carrot' },
+        ]
+      },
+      fruits: {
+        label: 'Fruits', icon: '&#127822;', color: 'coral',
+        words: [
+          { word:'Apple',  img:'apple.png',  hint:'Red or green fruit' },
+          { word:'Banana', img:'banana.png', hint:'Long and yellow' },
+          { word:'Grape',  img:'grape.png',  hint:'Small and purple' },
+          { word:'Mango',  img:'mango.png',  hint:'King of fruits' },
+          { word:'Orange', img:'orange-fruit.png', hint:'Juicy and round' },
+          { word:'Strawberry', img:'strawberry.png', hint:'Red with seeds' },
+        ]
+      },
+      body: {
+        label: 'Body', icon: '&#129492;', color: 'sunny',
+        words: [
+          { word:'Eye',   img:'eye.png',   hint:'You see with it' },
+          { word:'Ear',   img:'ear.png',   hint:'You hear with it' },
+          { word:'Nose',  img:'nose.png',  hint:'You smell with it' },
+          { word:'Hand',  img:'hand.png',  hint:'You hold things' },
+          { word:'Leg',   img:'leg.png',   hint:'You walk with it' },
+          { word:'Mouth', img:'mouth.png', hint:'You talk with it' },
+        ]
+      },
+      numbers: {
+        label: 'Numbers', icon: '&#128290;', color: 'teal',
+        words: [
+          { word:'One',   img:'one.png',   hint:'1' },
+          { word:'Two',   img:'two.png',   hint:'2' },
+          { word:'Three', img:'three.png', hint:'3' },
+          { word:'Four',  img:'four.png',  hint:'4' },
+          { word:'Five',  img:'five.png',  hint:'5' },
+          { word:'Six',   img:'six.png',   hint:'6' },
+          { word:'Seven', img:'seven.png', hint:'7' },
+          { word:'Eight', img:'eight.png', hint:'8' },
+          { word:'Nine',  img:'nine.png',  hint:'9' },
+          { word:'Ten',   img:'ten.png',   hint:'10' },
+        ]
+      },
+      family: {
+        label: 'Family', icon: '&#128106;', color: 'brand',
+        words: [
+          { word:'Mother', img:'mother.png', hint:'She takes care of you' },
+          { word:'Father', img:'father.png', hint:'He takes care of you' },
+          { word:'Sister', img:'sister.png', hint:'Your parents\' daughter' },
+          { word:'Brother',img:'brother.png',hint:'Your parents\' son' },
+          { word:'Baby',   img:'baby.png',   hint:'Very small child' },
+        ]
+      },
+    };
+
+    const colorMap = { brand:'#FF6B35', teal:'#4ECDC4', coral:'#FF6B6B', sunny:'#FFE66D' };
+    const ACHIEVEMENTS = [
+      { id:'first_word',   title:'First Word',     desc:'Learn your first word',             icon:'&#11088;',  need:1,   stat:'wordsLearned' },
+      { id:'ten_words',    title:'Word Explorer',   desc:'Learn 10 words',                    icon:'&#128218;', need:10,  stat:'wordsLearned' },
+      { id:'first_game',   title:'Game On!',        desc:'Play your first game',              icon:'&#127918;', need:1,   stat:'gamesPlayed'  },
+      { id:'five_games',   title:'Game Master',     desc:'Play 5 games',                      icon:'&#127942;', need:5,   stat:'gamesPlayed'  },
+      { id:'perfect',      title:'Perfect Score',   desc:'Get 100% in a quiz',                icon:'&#128175;', need:1,   stat:'perfectScores'},
+      { id:'all_cats',     title:'All Categories',  desc:'Visit every vocabulary category',   icon:'&#127752;', need:6,   stat:'catsVisited'  },
+      { id:'ar_explorer',  title:'AR Explorer',     desc:'Capture 5 words in AR',             icon:'&#128302;', need:5,   stat:'arCaptures'   },
+      { id:'streak3',      title:'3-Day Streak',    desc:'Learn 3 days in a row',             icon:'&#128293;', need:3,   stat:'streak'       },
+    ];
+
+    // ======================== STATE (localStorage) ========================
+
+    const defaultState = {
+      wordsLearned: [],
+      gamesPlayed: 0,
+      perfectScores: 0,
+      catsVisited: [],
+      arCaptures: 0,
+      streak: 1,
+      lastDate: new Date().toDateString(),
+      scores: [],
+    };
+
+    function loadState() {
+      try {
+        const s = JSON.parse(localStorage.getItem('lingualand'));
+        if (s) {
+          // Update streak
+          const today = new Date().toDateString();
+          if (s.lastDate !== today) {
+            const last = new Date(s.lastDate);
+            const diff = Math.floor((new Date() - last) / 86400000);
+            s.streak = diff === 1 ? s.streak + 1 : 1;
+            s.lastDate = today;
+          }
+          return { ...defaultState, ...s };
+        }
+      } catch(e) {}
+      return { ...defaultState };
+    }
+
+    function saveState() { localStorage.setItem('lingualand', JSON.stringify(state)); }
+
+    let state = loadState();
+
+    function recordWord(word) {
+      if (!state.wordsLearned.includes(word)) {
+        state.wordsLearned.push(word);
+        saveState();
+      }
+    }
+    function recordCat(cat) {
+      if (!state.catsVisited.includes(cat)) {
+        state.catsVisited.push(cat);
+        saveState();
+      }
+    }
+    function recordGame(score, total) {
+      state.gamesPlayed++;
+      state.scores.push({ score, total, date: Date.now() });
+      if (score === total) state.perfectScores++;
+      saveState();
+    }
+    function recordARCapture() { state.arCaptures++; saveState(); }
+
+    // ======================== NAVIGATION ========================
+
+    function go(section) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById('sec-' + section).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('active');
+        b.classList.add('bg-orange-50', 'text-bark');
+      });
+      const btn = document.querySelector(`.nav-btn[data-nav="${section}"]`);
+      if (btn) {
+        btn.classList.add('active');
+        btn.classList.remove('bg-orange-50', 'text-bark');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (section === 'progress') renderProgress();
+      if (section === 'games') resetGamePicker();
+    }
+
+    // ======================== SPEAK (Text-to-Speech) ========================
+
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US'; u.rate = 0.85; u.pitch = 1.1;
+        window.speechSynthesis.speak(u);
+      }
+    }
+
+    // ======================== CONFETTI ========================
+
+    function confetti(x, y) {
+      const colors = ['#FF6B35','#4ECDC4','#FFE66D','#FF6B6B','#95E1D3'];
+      for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = (x + (Math.random()-0.5)*80) + 'px';
+        p.style.top  = (y + Math.random()*20) + 'px';
+        p.style.background = colors[Math.floor(Math.random()*colors.length)];
+        p.style.animationDelay = (Math.random()*0.3)+'s';
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1500);
+      }
+    }
+
+    // ======================== ALPHABET PARADE ========================
+
+    function buildAlphabet() {
+      const el = document.getElementById('alphabet-parade');
+      const colors = ['bg-brand','bg-teal','bg-coral','bg-amber-400'];
+      for (let i = 0; i < 26; i++) {
+        const ch = String.fromCharCode(65 + i);
+        const btn = document.createElement('button');
+        btn.className = `letter-btn w-12 h-12 md:w-14 md:h-14 rounded-xl ${colors[i%4]} text-white font-display text-xl font-bold shadow-md cursor-pointer`;
+        btn.textContent = ch;
+        btn.onclick = function(e) {
+          speak(ch);
+          this.classList.add('anim-bounce');
+          confetti(e.clientX, e.clientY);
+          setTimeout(() => this.classList.remove('anim-bounce'), 600);
+        };
+        el.appendChild(btn);
+      }
+    }
+
+    // ======================== VOCABULARY ========================
+
+    let currentCat = null;
+    let currentCardIdx = 0;
+
+    function buildVocabTabs() {
+      const el = document.getElementById('vocab-tabs');
+      el.innerHTML = '';
+      Object.entries(VOCAB).forEach(([key, cat]) => {
+        const btn = document.createElement('button');
+        const bgClass = currentCat === key ? 'bg-brand text-white' : 'bg-white text-bark border-2 border-orange-100';
+        btn.className = `px-4 py-2 rounded-full font-bold text-sm transition cursor-pointer ${bgClass}`;
+        btn.innerHTML = `${cat.icon} ${cat.label}`;
+        btn.onclick = () => { currentCat = key; currentCardIdx = 0; recordCat(key); buildVocabTabs(); renderFlashcard(); };
+        el.appendChild(btn);
+      });
+    }
+
+    function renderFlashcard() {
+      const area = document.getElementById('flashcard-area');
+      if (!currentCat) { area.innerHTML = '<p class="text-bark/50 text-lg font-semibold">Choose a category above to start!</p>'; return; }
+      const words = VOCAB[currentCat].words;
+      const w = words[currentCardIdx];
+
+      area.innerHTML = `
+        <div class="flex items-center gap-4 mb-4">
+          <button onclick="prevCard()" class="w-10 h-10 rounded-full bg-orange-100 text-brand font-bold text-xl flex items-center justify-center cursor-pointer">&larr;</button>
+          <span class="font-bold text-bark/60 text-sm">${currentCardIdx+1} / ${words.length}</span>
+          <button onclick="nextCard()" class="w-10 h-10 rounded-full bg-orange-100 text-brand font-bold text-xl flex items-center justify-center cursor-pointer">&rarr;</button>
+        </div>
+        <div class="flashcard w-72 h-80 mx-auto" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner w-full h-full">
+            <div class="flashcard-front bg-white border-4 border-orange-100 p-6">
+              <img src="${w.img}" alt="${w.word}" class="w-32 h-32 object-contain mb-4 rounded-xl" onerror="this.style.display='none'" />
+              <div class="text-6xl font-display font-bold text-brand">${w.word}</div>
+              <p class="text-bark/40 text-xs mt-2 font-semibold">Tap to flip</p>
+            </div>
+            <div class="flashcard-back bg-teal p-6 text-white">
+              <div class="text-5xl font-display font-bold mb-3">${w.word}</div>
+              <p class="text-lg font-semibold">${w.hint}</p>
+              <button onclick="event.stopPropagation();speak('${w.word}')" class="mt-4 px-4 py-2 bg-white text-teal font-bold rounded-full text-sm cursor-pointer">
+                &#128264; Listen
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Word grid -->
+        <div class="flex flex-wrap justify-center gap-2 mt-6 max-w-md">
+          ${words.map((wd, i) => `
+            <button onclick="currentCardIdx=${i};recordWord('${wd.word}');renderFlashcard();speak('${wd.word}')"
+              class="px-3 py-1.5 rounded-full text-sm font-bold cursor-pointer transition ${i===currentCardIdx ? 'bg-brand text-white' : 'bg-white text-bark border border-orange-100 hover:bg-orange-50'}">
+              ${wd.word}
+            </button>
+          `).join('')}
+        </div>
+      `;
+      recordWord(w.word);
+    }
+
+    function prevCard() {
+      const len = VOCAB[currentCat].words.length;
+      currentCardIdx = (currentCardIdx - 1 + len) % len;
+      renderFlashcard();
+    }
+    function nextCard() {
+      const len = VOCAB[currentCat].words.length;
+      currentCardIdx = (currentCardIdx + 1) % len;
+      renderFlashcard();
+    }
+
+    // ======================== GAMES ========================
+
+    function resetGamePicker() {
+      document.getElementById('game-picker').classList.remove('hidden');
+      document.getElementById('game-board').classList.add('hidden');
+      document.getElementById('game-board').innerHTML = '';
+    }
+
+    function startGame(type) {
+      document.getElementById('game-picker').classList.add('hidden');
+      const board = document.getElementById('game-board');
+      board.classList.remove('hidden');
+      board.innerHTML = '';
+
+      if (type === 'match')  buildMatchGame(board);
+      if (type === 'spell')  buildSpellGame(board);
+      if (type === 'quiz')   buildQuizGame(board);
+    }
+
+    // ---------- MATCH GAME ----------
+
+    function buildMatchGame(board) {
+      const allWords = Object.values(VOCAB).flatMap(c => c.words);
+      const picked = shuffle(allWords).slice(0, 6);
+      // Create pairs: word card + image card
+      let cards = [];
+      picked.forEach((w, i) => {
+        cards.push({ id: i, type:'word', text: w.word, match: i });
+        cards.push({ id: i, type:'img',  img: w.img, word: w.word, match: i });
+      });
+      cards = shuffle(cards);
+
+      let flipped = [];
+      let matched = [];
+      let moves = 0;
+
+      board.innerHTML = `
+        <div class="text-center mb-4">
+          <h2 class="font-display text-2xl font-bold text-bark">Word Match</h2>
+          <p class="text-bark/60 font-semibold text-sm">Find the matching pairs! Moves: <span id="match-moves">0</span></p>
+        </div>
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 max-w-lg mx-auto" id="match-grid"></div>
+        <div class="text-center mt-6">
+          <button onclick="resetGamePicker()" class="px-5 py-2 bg-orange-100 text-brand font-bold rounded-full cursor-pointer">Back to Games</button>
+        </div>
+      `;
+
+      const grid = document.getElementById('match-grid');
+      cards.forEach((card, idx) => {
+        const div = document.createElement('div');
+        div.className = 'h-24 bg-brand rounded-xl flex items-center justify-center cursor-pointer shadow-md transition-all';
+        div.dataset.idx = idx;
+        div.innerHTML = `<span class="text-white font-display text-3xl font-bold">?</span>`;
+        div.onclick = function() {
+          if (flipped.length >= 2 || matched.includes(card.match) || flipped.find(f => f.idx === idx)) return;
+          // Reveal
+          if (card.type === 'word') {
+            div.className = 'h-24 bg-white border-2 border-brand rounded-xl flex items-center justify-center shadow-md';
+            div.innerHTML = `<span class="text-brand font-display text-xl font-bold">${card.text}</span>`;
+          } else {
+            div.className = 'h-24 bg-white border-2 border-teal rounded-xl flex items-center justify-center shadow-md p-2';
+            div.innerHTML = `<img src="${card.img}" alt="${card.word}" class="h-16 object-contain rounded" onerror="this.outerHTML='<span class=\\'text-teal font-display text-lg font-bold\\'>${card.word}</span>'" />`;
+          }
+          speak(card.type === 'word' ? card.text : card.word);
+          flipped.push({ idx, match: card.match });
+
+          if (flipped.length === 2) {
+            moves++;
+            document.getElementById('match-moves').textContent = moves;
+            if (flipped[0].match === flipped[1].match) {
+              matched.push(flipped[0].match);
+              flipped = [];
+              confetti(window.innerWidth/2, window.innerHeight/2);
+              if (matched.length === picked.length) {
+                setTimeout(() => {
+                  recordGame(picked.length, picked.length);
+                  board.innerHTML += `<div class="fixed inset-0 bg-bark/50 flex items-center justify-center z-50" onclick="this.remove()">
+                    <div class="bg-white rounded-3xl p-10 text-center anim-pop max-w-sm mx-4">
+                      <div class="text-6xl mb-4">&#127881;</div>
+                      <h2 class="font-display text-3xl font-bold text-brand">You Win!</h2>
+                      <p class="text-bark/60 font-semibold mt-2">Completed in ${moves} moves</p>
+                      <button onclick="this.parentElement.parentElement.remove();resetGamePicker()" class="mt-4 px-6 py-2 bg-brand text-white font-bold rounded-full cursor-pointer">Play Again</button>
+                    </div>
+                  </div>`;
+                }, 500);
+              }
+            } else {
+              setTimeout(() => {
+                grid.children[flipped[0].idx].className = 'h-24 bg-brand rounded-xl flex items-center justify-center cursor-pointer shadow-md';
+                grid.children[flipped[0].idx].innerHTML = `<span class="text-white font-display text-3xl font-bold">?</span>`;
+                grid.children[flipped[1].idx].className = 'h-24 bg-brand rounded-xl flex items-center justify-center cursor-pointer shadow-md';
+                grid.children[flipped[1].idx].innerHTML = `<span class="text-white font-display text-3xl font-bold">?</span>`;
+                flipped = [];
+              }, 900);
+            }
+          }
+        };
+        grid.appendChild(div);
+      });
+    }
+
+    // ---------- SPELL GAME ----------
+
+    function buildSpellGame(board) {
+      const allWords = Object.values(VOCAB).flatMap(c => c.words).filter(w => w.word.length <= 6);
+      const gameWords = shuffle(allWords).slice(0, 5);
+      let round = 0;
+      let score = 0;
+
+      function renderRound() {
+        if (round >= gameWords.length) {
+          recordGame(score, gameWords.length);
+          board.innerHTML = `
+            <div class="text-center py-10 anim-fadeUp">
+              <div class="text-6xl mb-4">${score === gameWords.length ? '&#127942;' : '&#11088;'}</div>
+              <h2 class="font-display text-3xl font-bold text-brand">Spelling Done!</h2>
+              <p class="text-bark/60 font-semibold mt-2 text-lg">You got ${score} out of ${gameWords.length} correct</p>
+              <div class="flex gap-2 justify-center mt-2">${Array.from({length:5}, (_,i) => `<span class="text-3xl">${i < score ? '&#11088;' : '&#9734;'}</span>`).join('')}</div>
+              <button onclick="resetGamePicker()" class="mt-6 px-6 py-2 bg-brand text-white font-bold rounded-full cursor-pointer">Back to Games</button>
+            </div>`;
+          return;
+        }
+
+        const w = gameWords[round];
+        const letters = shuffle(w.word.toUpperCase().split(''));
+        let answer = [];
+
+        board.innerHTML = `
+          <div class="text-center mb-4">
+            <h2 class="font-display text-2xl font-bold text-bark">Spell It Out</h2>
+            <p class="text-bark/60 font-semibold text-sm">Round ${round+1} of ${gameWords.length} &bull; Score: ${score}</p>
+          </div>
+          <div class="max-w-md mx-auto bg-white rounded-2xl border-2 border-orange-100 p-6 text-center">
+            <img src="${w.img}" alt="Spell this word" class="w-28 h-28 object-contain mx-auto mb-2 rounded-xl" onerror="this.style.display='none'" />
+            <p class="text-bark/50 font-semibold text-sm mb-1">${w.hint}</p>
+            <button onclick="speak('${w.word}')" class="text-brand font-bold text-sm mb-4 cursor-pointer">&#128264; Listen</button>
+            <!-- Answer slots -->
+            <div class="flex justify-center gap-2 mb-6 min-h-[56px]" id="spell-slots"></div>
+            <!-- Letter choices -->
+            <div class="flex flex-wrap justify-center gap-2" id="spell-letters"></div>
+            <div id="spell-feedback" class="mt-4"></div>
+          </div>
+          <div class="text-center mt-4">
+            <button onclick="resetGamePicker()" class="px-5 py-2 bg-orange-100 text-brand font-bold rounded-full cursor-pointer text-sm">Back to Games</button>
+          </div>
+        `;
+
+        const slotsEl = document.getElementById('spell-slots');
+        const lettersEl = document.getElementById('spell-letters');
+
+        function renderSlots() {
+          slotsEl.innerHTML = '';
+          for (let i = 0; i < w.word.length; i++) {
+            const slot = document.createElement('div');
+            slot.className = `w-12 h-14 rounded-xl border-2 flex items-center justify-center font-display text-2xl font-bold cursor-pointer transition ${answer[i] ? 'bg-brand text-white border-brand' : 'bg-orange-50 border-orange-200 text-bark/30'}`;
+            slot.textContent = answer[i] || '_';
+            slot.onclick = () => {
+              if (answer[i]) {
+                answer.splice(i, 1);
+                renderSlots();
+                renderLetters();
+              }
+            };
+            slotsEl.appendChild(slot);
+          }
+        }
+
+        function renderLetters() {
+          lettersEl.innerHTML = '';
+          const used = [...answer];
+          letters.forEach((ch, li) => {
+            const usedIdx = used.indexOf(ch);
+            const isUsed = usedIdx !== -1;
+            if (isUsed) used.splice(usedIdx, 1);
+            const btn = document.createElement('button');
+            btn.className = `letter-btn w-12 h-14 rounded-xl font-display text-2xl font-bold cursor-pointer transition ${isUsed ? 'bg-orange-50 text-bark/20 border-2 border-dashed border-orange-200' : 'bg-teal text-white shadow-md'}`;
+            btn.textContent = ch;
+            btn.disabled = isUsed;
+            btn.onclick = () => {
+              if (answer.length < w.word.length) {
+                answer.push(ch);
+                renderSlots();
+                renderLetters();
+                speak(ch);
+                if (answer.length === w.word.length) checkSpelling();
+              }
+            };
+            lettersEl.appendChild(btn);
+          });
+        }
+
+        function checkSpelling() {
+          const fb = document.getElementById('spell-feedback');
+          if (answer.join('') === w.word.toUpperCase()) {
+            score++;
+            confetti(window.innerWidth/2, window.innerHeight/2);
+            fb.innerHTML = `<p class="text-teal font-bold text-lg anim-pop">Correct! &#127881;</p>`;
+            speak('Correct! ' + w.word);
+            recordWord(w.word);
+            setTimeout(() => { round++; renderRound(); }, 1200);
+          } else {
+            fb.innerHTML = `<p class="text-coral font-bold text-lg anim-wiggle">Try again!</p>`;
+            speak('Try again');
+            setTimeout(() => { answer = []; renderSlots(); renderLetters(); fb.innerHTML=''; }, 800);
+          }
+        }
+
+        renderSlots();
+        renderLetters();
+        speak(w.hint);
+      }
+
+      renderRound();
+    }
+
+    // ---------- QUIZ GAME ----------
+
+    function buildQuizGame(board) {
+      const allWords = Object.values(VOCAB).flatMap(c => c.words);
+      const gameWords = shuffle(allWords).slice(0, 8);
+      let round = 0;
+      let score = 0;
+
+      function renderQuiz() {
+        if (round >= gameWords.length) {
+          recordGame(score, gameWords.length);
+          board.innerHTML = `
+            <div class="text-center py-10 anim-fadeUp">
+              <div class="text-6xl mb-4">${score >= gameWords.length * 0.8 ? '&#127942;' : score >= gameWords.length * 0.5 ? '&#11088;' : '&#128170;'}</div>
+              <h2 class="font-display text-3xl font-bold text-brand">Quiz Complete!</h2>
+              <p class="text-bark/60 font-semibold mt-2 text-lg">${score} out of ${gameWords.length} correct</p>
+              <div class="flex gap-2 justify-center mt-2">${Array.from({length:gameWords.length}, (_,i) => `<span class="text-2xl">${i < score ? '&#11088;' : '&#9734;'}</span>`).join('')}</div>
+              <button onclick="resetGamePicker()" class="mt-6 px-6 py-2 bg-brand text-white font-bold rounded-full cursor-pointer">Back to Games</button>
+            </div>`;
+          return;
+        }
+
+        const w = gameWords[round];
+        // Get 3 wrong answers
+        const wrongs = shuffle(allWords.filter(x => x.word !== w.word)).slice(0, 3);
+        const options = shuffle([w, ...wrongs]);
+
+        board.innerHTML = `
+          <div class="text-center mb-4">
+            <h2 class="font-display text-2xl font-bold text-bark">Picture Quiz</h2>
+            <p class="text-bark/60 font-semibold text-sm">Question ${round+1} of ${gameWords.length} &bull; Score: ${score}</p>
+          </div>
+          <div class="max-w-md mx-auto bg-white rounded-2xl border-2 border-orange-100 p-6 text-center">
+            <img src="${w.img}" alt="What is this?" class="w-36 h-36 object-contain mx-auto mb-2 rounded-xl" onerror="this.style.display='none'" />
+            <p class="text-bark/70 font-semibold mb-1">Hint: ${w.hint}</p>
+            <button onclick="speak('${w.hint}')" class="text-brand font-bold text-sm mb-4 cursor-pointer">&#128264; Hear hint</button>
+            <div class="grid grid-cols-2 gap-3" id="quiz-options"></div>
+            <div id="quiz-feedback" class="mt-4"></div>
+          </div>
+          <div class="text-center mt-4">
+            <button onclick="resetGamePicker()" class="px-5 py-2 bg-orange-100 text-brand font-bold rounded-full cursor-pointer text-sm">Back to Games</button>
+          </div>
+        `;
+
+        const optionsEl = document.getElementById('quiz-options');
+        options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'py-3 px-4 bg-orange-50 border-2 border-orange-100 rounded-xl font-display text-lg font-bold text-bark cursor-pointer transition hover:border-brand hover:bg-brand/5';
+          btn.textContent = opt.word;
+          btn.onclick = function() {
+            const fb = document.getElementById('quiz-feedback');
+            optionsEl.querySelectorAll('button').forEach(b => b.disabled = true);
+            if (opt.word === w.word) {
+              score++;
+              btn.className = 'py-3 px-4 bg-teal border-2 border-teal rounded-xl font-display text-lg font-bold text-white anim-pop';
+              fb.innerHTML = `<p class="text-teal font-bold text-lg">Correct! &#127881;</p>`;
+              speak('Correct! ' + w.word);
+              confetti(window.innerWidth/2, window.innerHeight/2);
+              recordWord(w.word);
+            } else {
+              btn.className = 'py-3 px-4 bg-coral border-2 border-coral rounded-xl font-display text-lg font-bold text-white anim-wiggle';
+              fb.innerHTML = `<p class="text-coral font-bold text-lg">It was "${w.word}"</p>`;
+              speak('The answer is ' + w.word);
+            }
+            setTimeout(() => { round++; renderQuiz(); }, 1400);
+          };
+          optionsEl.appendChild(btn);
+        });
+      }
+
+      renderQuiz();
+    }
+
+    // ======================== AR ========================
+
+    function buildARWordList() {
+      const el = document.getElementById('ar-word-list');
+      const words = Object.values(VOCAB).flatMap(c => c.words).slice(0, 12);
+      el.innerHTML = words.map(w => `
+        <div class="bg-orange-50 rounded-lg p-2 text-center cursor-pointer transition hover:bg-brand/10" onclick="speak('${w.word}')">
+          <div class="text-xs font-bold text-bark">${w.word}</div>
+        </div>
+      `).join('');
+    }
+
+    function launchAR() {
+      const overlay = document.getElementById('ar-overlay');
+      overlay.classList.remove('hidden');
+
+      const container = document.getElementById('ar-scene-container');
+      /*
+        ==========================================================
+        CUSTOMIZE YOUR AR SCENE HERE
+        ==========================================================
+        Replace the innerHTML below with your own <a-scene>.
+        Use your local images (cat.png, dog.png, etc.) like this:
+
+          <a-marker preset="hiro">
+            <a-image src="cat.png" position="0 0.5 0" scale="2 2 2"></a-image>
+            <a-text value="CAT" position="0 1.5 0" scale="2 2 2"
+                    color="#FF6B35" align="center" font="monoid"></a-text>
+          </a-marker>
+
+        You can add multiple <a-marker> blocks for different markers.
+        ==========================================================
+      */
+      container.innerHTML = `
+        <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+          <a-marker preset="hiro">
+            <a-box position="0 0.5 0" material="color: #FF6B35;" scale="0.5 0.5 0.5"
+                   animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear"></a-box>
+            <a-text value="CAT" position="0 1.2 0" scale="1.5 1.5 1.5"
+                    color="#FF6B35" align="center" font="monoid"></a-text>
+          </a-marker>
+          <a-entity camera></a-entity>
+        </a-scene>
+      `;
+    }
+
+    function closeAR() {
+      const overlay = document.getElementById('ar-overlay');
+      overlay.classList.add('hidden');
+      document.getElementById('ar-scene-container').innerHTML = '';
+    }
+
+    // Simulated AR
+    function buildSimAR() {
+      const simEl = document.getElementById('sim-ar');
+      const words = shuffle(Object.values(VOCAB).flatMap(c => c.words)).slice(0, 8);
+      let captured = [];
+
+      function spawnWords() {
+        // Remove old floating words
+        simEl.querySelectorAll('.sim-word').forEach(w => w.remove());
+        words.forEach((w, i) => {
+          if (captured.includes(w.word)) return;
+          const span = document.createElement('button');
+          span.className = 'sim-word absolute font-display font-bold text-lg px-3 py-1 rounded-full cursor-pointer transition hover:scale-110 anim-float';
+          const colors = ['bg-brand text-white','bg-teal text-white','bg-coral text-white','bg-amber-400 text-bark'];
+          span.className += ' ' + colors[i % colors.length];
+          span.style.top  = (15 + Math.random() * 60) + '%';
+          span.style.left = (5 + Math.random() * 75) + '%';
+          span.style.animationDelay = (Math.random() * 2) + 's';
+          span.textContent = w.word;
+          span.onclick = function(e) {
+            captured.push(w.word);
+            speak(w.word);
+            recordWord(w.word);
+            recordARCapture();
+            confetti(e.clientX, e.clientY);
+            this.remove();
+            renderCaptured();
+          };
+          simEl.appendChild(span);
+        });
+      }
+
+      function renderCaptured() {
+        const el = document.getElementById('captured-words');
+        el.innerHTML = captured.length
+          ? `<span class="text-sm font-bold text-bark/50">Captured:</span> ` + captured.map(w => `<span class="px-3 py-1 bg-teal/10 text-teal font-bold rounded-full text-sm">${w}</span>`).join('')
+          : '';
+      }
+
+      spawnWords();
+    }
+
+    // ======================== PROGRESS ========================
+
+    function renderProgress() {
+      // Stats
+      const statsEl = document.getElementById('stats-grid');
+      const stats = [
+        { label:'Words Learned',   value: state.wordsLearned.length, icon:'&#128218;', bg:'bg-brand/10 text-brand' },
+        { label:'Games Played',    value: state.gamesPlayed,         icon:'&#127918;', bg:'bg-teal/10 text-teal' },
+        { label:'Day Streak',      value: state.streak,              icon:'&#128293;', bg:'bg-coral/10 text-coral' },
+        { label:'Perfect Scores',  value: state.perfectScores,       icon:'&#127942;', bg:'bg-amber-100 text-amber-600' },
+      ];
+      statsEl.innerHTML = stats.map(s => `
+        <div class="bg-white rounded-2xl border-2 border-orange-100 p-4 text-center">
+          <div class="text-3xl mb-1">${s.icon}</div>
+          <div class="font-display text-3xl font-bold ${s.bg.split(' ')[1]}">${s.value}</div>
+          <div class="text-bark/50 text-sm font-semibold">${s.label}</div>
+        </div>
+      `).join('');
+
+      // Category progress
+      const catEl = document.getElementById('cat-progress');
+      catEl.innerHTML = Object.entries(VOCAB).map(([key, cat]) => {
+        const total = cat.words.length;
+        const learned = cat.words.filter(w => state.wordsLearned.includes(w.word)).length;
+        const pct = Math.round((learned / total) * 100);
+        return `
+          <div class="bg-white rounded-xl border border-orange-100 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-bark">${cat.icon} ${cat.label}</span>
+              <span class="text-sm font-bold text-bark/50">${learned}/${total}</span>
+            </div>
+            <div class="w-full h-3 bg-orange-50 rounded-full overflow-hidden">
+              <div class="progress-fill h-full rounded-full" style="width:${pct}%;background:${colorMap[cat.color] || '#FF6B35'}"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Achievements
+      const achEl = document.getElementById('achievements');
+      achEl.innerHTML = ACHIEVEMENTS.map(a => {
+        const val = a.stat === 'wordsLearned' ? state.wordsLearned.length
+          : a.stat === 'catsVisited' ? state.catsVisited.length
+          : state[a.stat] || 0;
+        const unlocked = val >= a.need;
+        return `
+          <div class="rounded-2xl border-2 p-4 text-center transition ${unlocked ? 'bg-white border-brand/30' : 'bg-orange-50/50 border-dashed border-orange-200 opacity-60'}">
+            <div class="text-4xl mb-2 ${unlocked ? '' : 'grayscale'}">${a.icon}</div>
+            <div class="font-display text-sm font-bold text-bark">${a.title}</div>
+            <div class="text-bark/40 text-xs font-semibold">${a.desc}</div>
+            ${unlocked ? '<div class="mt-1 text-xs font-bold text-teal">Unlocked!</div>' : `<div class="mt-1 text-xs font-bold text-bark/30">${val}/${a.need}</div>`}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ======================== UTILS ========================
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // ======================== INIT ========================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      buildAlphabet();
+      buildVocabTabs();
+      buildARWordList();
+      buildSimAR();
+    });
+  </script>
+
+</body>
+</html>
