@@ -14,11 +14,14 @@
       theme: {
         extend: {
           colors: {
-            brand: '#FF6B35',
-            teal:  '#2EC4B6',
-            cream: '#FFF8F0',
-            bark:  '#1E1E2E',
-            glass: 'rgba(255,255,255,0.15)',
+            brand:  '#FF6B35',
+            sky1:   '#E8F4FD',
+            sky2:   '#C5E3F6',
+            sky3:   '#A8D8F0',
+            mint:   '#2EC4B6',
+            cream:  '#FFF8F0',
+            bark:   '#2D3748',
+            glass:  'rgba(255,255,255,0.25)',
           },
           fontFamily: {
             display: ['"Baloo 2"', 'cursive'],
@@ -34,472 +37,835 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- A-Frame + AR.js -->
+  <!-- A-Frame + AR.js (loaded but scene created dynamically) -->
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Nunito', sans-serif; color: #1E1E2E; }
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Nunito', sans-serif; color: #2D3748; }
     .font-display { font-family: 'Baloo 2', cursive; }
 
-    /* ---- AR video feed sits behind everything ---- */
-    #arjs-video,
-    video { position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important; object-fit: cover; z-index: -2 !important; }
+    /* AR video feed behind everything */
+    #arjs-video, video { position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important; object-fit: cover; z-index: -2 !important; }
     canvas.a-canvas { position: fixed !important; top: 0; left: 0; z-index: -1 !important; }
 
-    /* ---- Glassmorphism base ---- */
+    /* Glassmorphism */
     .glass {
-      background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.5);
     }
     .glass-dark {
-      background: rgba(30, 30, 46, 0.5);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(30,40,55,0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
     }
 
-    /* ---- Layout shell ---- */
-    #app-shell {
+    /* Animations */
+    @keyframes float     { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-12px) } }
+    @keyframes floatSlow { 0%,100%{ transform:translateY(0) rotate(0deg) } 50%{ transform:translateY(-8px) rotate(5deg) } }
+    @keyframes pop       { 0%{ transform:scale(0) } 70%{ transform:scale(1.12) } 100%{ transform:scale(1) } }
+    @keyframes fadeUp    { from{ opacity:0; transform:translateY(20px) } to{ opacity:1; transform:translateY(0) } }
+    @keyframes fadeIn    { from{ opacity:0 } to{ opacity:1 } }
+    @keyframes shake     { 0%,100%{ transform:rotate(0) } 25%{ transform:rotate(-5deg) } 75%{ transform:rotate(5deg) } }
+    @keyframes slideInL  { from{ transform:translateX(-100%); opacity:0 } to{ transform:translateX(0); opacity:1 } }
+    @keyframes slideInB  { from{ transform:translateY(100%); opacity:0 } to{ transform:translateY(0); opacity:1 } }
+    @keyframes bounce    { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-6px) } }
+    @keyframes spin      { to{ transform:rotate(360deg) } }
+    .anim-float     { animation: float 3s ease-in-out infinite; }
+    .anim-floatSlow { animation: floatSlow 4s ease-in-out infinite; }
+    .anim-pop       { animation: pop .4s ease-out both; }
+    .anim-fadeUp    { animation: fadeUp .6s ease-out both; }
+    .anim-fadeIn    { animation: fadeIn .4s ease-out both; }
+    .anim-shake     { animation: shake .4s ease-in-out; }
+    .anim-slideInL  { animation: slideInL .5s ease-out both; }
+    .anim-slideInB  { animation: slideInB .4s ease-out both; }
+    .anim-bounce    { animation: bounce 2s ease-in-out infinite; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,107,53,0.25); border-radius: 4px; }
+
+    /* Landing page */
+    #landing {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(170deg, #E8F4FD 0%, #C5E3F6 40%, #A8D8F0 100%);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    #landing.hide {
+      opacity: 0; transform: scale(1.05); pointer-events: none;
+    }
+
+    /* Dashboard shell */
+    #dashboard {
       position: fixed; inset: 0; z-index: 10;
-      display: flex; flex-direction: column;
-      pointer-events: none;
+      display: none; flex-direction: column;
     }
-    #app-shell > * { pointer-events: auto; }
+    #dashboard.show { display: flex; }
+    @media (min-width: 768px) {
+      #dashboard.show { flex-direction: row; }
+    }
 
-    /* ---- Desktop sidebar ---- */
+    /* Sidebar */
     #sidebar {
       display: none; flex-direction: column;
-      width: 320px; height: 100vh;
-      overflow-y: auto; padding: 0;
+      width: 300px; min-width: 300px; height: 100vh;
+      overflow-y: auto;
     }
     @media (min-width: 768px) {
-      #app-shell { flex-direction: row; }
       #sidebar { display: flex; }
       #bottom-nav { display: none !important; }
-      #main-area { flex: 1; }
     }
 
-    /* ---- Mobile bottom nav ---- */
+    /* Bottom nav */
     #bottom-nav {
       display: flex; align-items: center; justify-content: space-around;
-      padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+      padding: 6px 0 max(6px, env(safe-area-inset-bottom));
     }
-    @media (min-width: 768px) {
-      #bottom-nav { display: none; }
-    }
+    @media (min-width: 768px) { #bottom-nav { display: none; } }
 
-    /* ---- Scrollbar thin ---- */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,107,53,0.3); border-radius: 4px; }
+    .nav-item { transition: all .2s; cursor: pointer; }
+    .nav-item.active .nav-icon { color: #FF6B35; }
+    .nav-item.active .nav-label { color: #FF6B35; }
+    .nav-item.active { transform: scale(1.05); }
 
-    /* ---- Animations ---- */
-    @keyframes float   { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-8px) } }
-    @keyframes pop     { 0%{ transform:scale(0) } 70%{ transform:scale(1.15) } 100%{ transform:scale(1) } }
-    @keyframes fadeIn  { from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:translateY(0) } }
-    @keyframes pulse   { 0%,100%{ opacity:1 } 50%{ opacity:.5 } }
-    @keyframes shake   { 0%,100%{ transform:rotate(0) } 25%{ transform:rotate(-6deg) } 75%{ transform:rotate(6deg) } }
-    .anim-float  { animation: float 3s ease-in-out infinite; }
-    .anim-pop    { animation: pop .4s ease-out both; }
-    .anim-fadeIn { animation: fadeIn .4s ease-out both; }
-    .anim-pulse  { animation: pulse 1.5s ease-in-out infinite; }
-    .anim-shake  { animation: shake .4s ease-in-out; }
+    .word-card { transition: transform .15s, box-shadow .15s; cursor: pointer; }
+    .word-card:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .word-card.selected { border-color: #FF6B35 !important; box-shadow: 0 0 0 3px rgba(255,107,53,0.25); }
 
-    /* ---- Word card in sidebar ---- */
-    .word-card {
-      transition: transform .15s, box-shadow .15s;
-      cursor: pointer;
-    }
-    .word-card:hover { transform: scale(1.03); box-shadow: 0 4px 20px rgba(0,0,0,.1); }
-    .word-card.active-word { border-color: #FF6B35 !important; box-shadow: 0 0 0 3px rgba(255,107,53,0.3); }
-
-    /* ---- Bottom nav button ---- */
-    .bnav-btn { transition: color .15s, transform .15s; }
-    .bnav-btn.active { color: #FF6B35; transform: scale(1.1); }
-
-    /* ---- Action buttons row ---- */
-    .action-btn {
-      transition: transform .15s, box-shadow .15s;
-    }
+    .action-btn { transition: transform .15s; cursor: pointer; }
     .action-btn:active { transform: scale(.92); }
 
-    /* ---- Toast notification ---- */
+    /* Toast */
     #toast {
       position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-      z-index: 100; transition: opacity .3s, transform .3s;
+      z-index: 9000; transition: opacity .3s, transform .3s;
       opacity: 0; pointer-events: none;
     }
-    #toast.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(-8px); }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
 
-    /* ---- Captured photo popup ---- */
+    /* Photo modal */
     #photo-modal {
-      position: fixed; inset: 0; z-index: 200;
+      position: fixed; inset: 0; z-index: 9500;
       display: none; align-items: center; justify-content: center;
-      background: rgba(0,0,0,.6); backdrop-filter: blur(6px);
+      background: rgba(0,0,0,.55); backdrop-filter: blur(8px);
     }
     #photo-modal.open { display: flex; }
+
+    /* Content background behind non-AR pages */
+    .content-bg {
+      background: linear-gradient(170deg, #FFF8F0 0%, #FFF0E0 100%);
+    }
   </style>
 </head>
 
-<body>
+<body class="bg-sky1">
 
-  <!-- ============================================================ -->
-  <!--  A-SCENE: AR.js with embedded + transparent background       -->
-  <!--  The webcam feed renders BEHIND everything (z-index: -2).    -->
-  <!--  Add your own <a-marker> blocks here with local images.      -->
-  <!-- ============================================================ -->
-  <a-scene
-    embedded
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-    renderer="logarithmicDepthBuffer: true; alpha: true;"
-    vr-mode-ui="enabled: false"
-    style="position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1;"
-  >
-    <!-- ======================================================== -->
-    <!--  YOUR MARKERS GO HERE                                     -->
-    <!--  Example with your Microsoft Paint images:                -->
-    <!--                                                           -->
-    <!--  <a-marker preset="hiro">                                 -->
-    <!--    <a-image src="cat.png"                                 -->
-    <!--             position="0 0.5 0"                            -->
-    <!--             rotation="-90 0 0"                            -->
-    <!--             scale="1 1 1">                                -->
-    <!--    </a-image>                                             -->
-    <!--    <a-text value="CAT"                                    -->
-    <!--            position="0 0.5 0.6"                           -->
-    <!--            rotation="-90 0 0"                             -->
-    <!--            color="#FF6B35"                                -->
-    <!--            align="center"                                 -->
-    <!--            scale="1.5 1.5 1.5">                           -->
-    <!--    </a-text>                                              -->
-    <!--  </a-marker>                                              -->
-    <!-- ======================================================== -->
+  <!-- ================================================================ -->
+  <!--  LANDING PAGE (VioEdu Style)                                     -->
+  <!-- ================================================================ -->
+  <div id="landing">
+    <div class="w-full max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center gap-8 md:gap-12">
 
-    <a-marker preset="hiro">
-      <a-box
-        position="0 0.4 0"
-        material="color: #FF6B35; opacity: 0.85;"
-        scale="0.5 0.5 0.5"
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
-      ></a-box>
-      <a-text
-        value="APPLE"
-        position="0 1 0"
-        scale="1.5 1.5 1.5"
-        color="#FF6B35"
-        align="center"
-      ></a-text>
-    </a-marker>
-
-    <a-entity camera></a-entity>
-  </a-scene>
-
-
-  <!-- ============================================================ -->
-  <!--  UI SHELL: floats on top of camera feed                      -->
-  <!-- ============================================================ -->
-  <div id="app-shell">
-
-    <!-- ========== DESKTOP SIDEBAR (left) ========== -->
-    <div id="sidebar" class="glass">
-
-      <!-- Sidebar header -->
-      <div class="px-5 pt-5 pb-3">
-        <h1 class="font-display text-2xl font-extrabold text-brand leading-tight">LinguaLand</h1>
-        <p class="text-xs font-bold text-bark/60 mt-0.5">Cung hoc tieng Anh nhe!</p>
+      <!-- Left: Text content -->
+      <div class="flex-1 text-center md:text-left anim-fadeUp">
+        <h1 class="font-display text-4xl md:text-6xl font-extrabold text-bark leading-tight">
+          Cùng học tiếng Anh<br/>
+          <span class="text-brand">thật vui nào!</span>
+        </h1>
+        <p class="text-bark/60 text-base md:text-lg font-semibold mt-3 max-w-md mx-auto md:mx-0">
+          Nền tảng học tiếng Anh với công nghệ AR dành cho học sinh lớp 1.
+          Khám phá từ vựng, chơi trò chơi và chinh phục thành tích!
+        </p>
+        <div class="flex flex-col sm:flex-row items-center gap-3 mt-6 justify-center md:justify-start">
+          <button onclick="enterDashboard()"
+                  class="action-btn bg-brand text-white font-display text-lg font-bold px-8 py-3.5 rounded-full shadow-lg shadow-brand/30 hover:shadow-xl hover:shadow-brand/40 transition-all">
+            Học ngay
+          </button>
+          <button onclick="enterDashboard()"
+                  class="action-btn flex items-center gap-2 text-bark/70 font-bold text-sm hover:text-brand transition">
+            <svg class="w-8 h-8 text-brand bg-white rounded-full p-1.5 shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Giới thiệu về LinguaLand
+          </button>
+        </div>
       </div>
 
-      <!-- Sidebar tabs -->
-      <div class="flex gap-1 px-4 mb-3">
-        <button onclick="switchTab('vocab')" class="tab-btn flex-1 py-1.5 rounded-lg text-xs font-bold transition" data-tab="vocab">
-          <span class="block text-base">&#128218;</span> Tu vung
-        </button>
-        <button onclick="switchTab('game')" class="tab-btn flex-1 py-1.5 rounded-lg text-xs font-bold transition" data-tab="game">
-          <span class="block text-base">&#127918;</span> Tro choi
-        </button>
-        <button onclick="switchTab('trophy')" class="tab-btn flex-1 py-1.5 rounded-lg text-xs font-bold transition" data-tab="trophy">
-          <span class="block text-base">&#127942;</span> Thanh tich
-        </button>
-      </div>
-
-      <!-- Tab content -->
-      <div class="flex-1 overflow-y-auto px-4 pb-4" id="sidebar-content"></div>
-    </div>
-
-    <!-- ========== MAIN AREA (center / AR view) ========== -->
-    <div id="main-area" class="flex-1 flex flex-col relative" style="pointer-events:none;">
-
-      <!-- Top header bar (mobile + desktop) -->
-      <header class="glass mx-3 mt-3 md:mx-4 md:mt-4 rounded-2xl px-4 py-3 flex items-center justify-between" style="pointer-events:auto;">
-        <div class="flex items-center gap-2">
-          <span class="text-2xl anim-float" style="animation-delay:.2s;">&#127775;</span>
-          <div>
-            <h1 class="font-display text-lg font-extrabold text-brand leading-none">LinguaLand</h1>
-            <p class="text-[10px] font-bold text-bark/50">Kham pha tieng Anh bang AR</p>
+      <!-- Right: Mascot area with floating elements -->
+      <div class="flex-1 relative flex items-center justify-center min-h-[300px] md:min-h-[420px]">
+        <!-- Floating score papers -->
+        <div class="absolute top-4 left-4 md:top-2 md:left-8 anim-float" style="animation-delay:0s;">
+          <div class="bg-white rounded-xl shadow-lg p-2.5 rotate-[-8deg]">
+            <span class="font-display text-2xl font-bold text-red-500">10</span>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <span id="streak-badge" class="glass-dark text-white text-xs font-bold rounded-full px-2.5 py-1">&#128293; 1</span>
-          <span id="words-badge" class="glass-dark text-white text-xs font-bold rounded-full px-2.5 py-1">&#128218; 0</span>
+        <div class="absolute top-8 right-6 md:top-4 md:right-12 anim-float" style="animation-delay:.8s;">
+          <div class="bg-white rounded-xl shadow-lg p-2.5 rotate-[12deg]">
+            <span class="font-display text-2xl font-bold text-red-500">10</span>
+          </div>
         </div>
-      </header>
+        <!-- Floating shapes -->
+        <div class="absolute bottom-16 left-2 w-5 h-5 bg-mint/40 rounded rotate-45 anim-floatSlow" style="animation-delay:.4s;"></div>
+        <div class="absolute top-20 right-2 w-4 h-4 bg-brand/30 rounded-full anim-floatSlow" style="animation-delay:1.2s;"></div>
+        <div class="absolute bottom-8 right-12 w-6 h-3 bg-yellow-300/50 rounded-full rotate-12 anim-floatSlow" style="animation-delay:.6s;"></div>
+        <!-- Floating book -->
+        <div class="absolute bottom-4 right-0 anim-float" style="animation-delay:1.5s;">
+          <svg class="w-12 h-12 text-sky3 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.65 1 5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 19.45 5.05 19 6.5 19c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V5c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+        </div>
 
-      <!-- Active word display (floating center card) -->
-      <div class="flex-1 flex items-center justify-center" style="pointer-events:none;">
-        <div id="active-card" class="glass rounded-3xl p-6 text-center anim-fadeIn max-w-xs mx-4 hidden" style="pointer-events:auto;">
-          <img id="active-img" src="" alt="" class="w-28 h-28 object-contain mx-auto mb-3 rounded-2xl bg-white/60 p-2" onerror="this.style.display='none'" />
-          <h2 id="active-word" class="font-display text-4xl font-extrabold text-brand"></h2>
-          <p id="active-hint" class="text-sm font-semibold text-bark/60 mt-1"></p>
-          <p id="active-vn" class="text-xs font-bold text-teal mt-0.5"></p>
+        <!-- Robot mascot (SVG illustration) -->
+        <div class="relative z-10 anim-bounce">
+          <svg width="200" height="240" viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-xl">
+            <!-- Graduation cap -->
+            <polygon points="100,22 40,50 100,65 160,50" fill="#4A90D9" />
+            <rect x="85" y="10" width="30" height="14" rx="4" fill="#4A90D9" />
+            <line x1="155" y1="50" x2="168" y2="72" stroke="#4A90D9" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="170" cy="74" r="5" fill="#FFD700"/>
+            <!-- Head -->
+            <rect x="55" y="55" width="90" height="80" rx="20" fill="white" stroke="#E2E8F0" stroke-width="2.5"/>
+            <!-- Antenna -->
+            <line x1="100" y1="55" x2="100" y2="38" stroke="#A0AEC0" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="100" cy="36" r="5" fill="#FF6B35"/>
+            <!-- Eyes -->
+            <circle cx="78" cy="90" r="10" fill="#2D3748"/>
+            <circle cx="122" cy="90" r="10" fill="#2D3748"/>
+            <circle cx="82" cy="87" r="3" fill="white"/>
+            <circle cx="126" cy="87" r="3" fill="white"/>
+            <!-- Smile -->
+            <path d="M82 108 Q100 122 118 108" stroke="#2D3748" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <!-- Blush -->
+            <ellipse cx="68" cy="105" rx="8" ry="5" fill="#FFC0CB" opacity="0.5"/>
+            <ellipse cx="132" cy="105" rx="8" ry="5" fill="#FFC0CB" opacity="0.5"/>
+            <!-- Body -->
+            <rect x="65" y="138" width="70" height="55" rx="14" fill="white" stroke="#E2E8F0" stroke-width="2.5"/>
+            <!-- Tie -->
+            <polygon points="100,142 94,158 100,154 106,158" fill="#FF6B35"/>
+            <!-- Arms -->
+            <rect x="30" y="145" width="32" height="14" rx="7" fill="white" stroke="#E2E8F0" stroke-width="2" transform="rotate(-15 46 152)"/>
+            <rect x="138" y="140" width="32" height="14" rx="7" fill="white" stroke="#E2E8F0" stroke-width="2" transform="rotate(15 154 147)"/>
+            <!-- Waving hand (right) -->
+            <circle cx="170" cy="132" r="10" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+            <!-- Feet -->
+            <ellipse cx="82" cy="198" rx="14" ry="8" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+            <ellipse cx="118" cy="198" rx="14" ry="8" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+            <!-- Flowers at bottom -->
+            <circle cx="55" cy="225" r="4" fill="#FFD700"/>
+            <circle cx="65" cy="228" r="3" fill="#FFD700"/>
+            <circle cx="140" cy="226" r="3.5" fill="#FFD700"/>
+            <circle cx="150" cy="222" r="4" fill="#FFD700"/>
+            <line x1="55" y1="225" x2="55" y2="235" stroke="#48BB78" stroke-width="1.5"/>
+            <line x1="65" y1="228" x2="65" y2="237" stroke="#48BB78" stroke-width="1.5"/>
+            <line x1="140" y1="226" x2="140" y2="236" stroke="#48BB78" stroke-width="1.5"/>
+            <line x1="150" y1="222" x2="150" y2="234" stroke="#48BB78" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================ -->
+  <!--  DASHBOARD (sidebar + main)                                      -->
+  <!-- ================================================================ -->
+  <div id="dashboard">
+
+    <!-- ======== SIDEBAR (desktop) ======== -->
+    <aside id="sidebar" class="glass-strong anim-slideInL">
+
+      <!-- Logo -->
+      <div class="px-5 pt-5 pb-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-brand flex items-center justify-center shadow-md shadow-brand/30">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <div>
+            <h1 class="font-display text-xl font-extrabold text-brand leading-none">LinguaLand</h1>
+            <p class="text-[10px] font-bold text-bark/40">Cùng học tiếng Anh nhé!</p>
+          </div>
         </div>
       </div>
 
-      <!-- Bottom action buttons -->
-      <div class="flex items-center justify-center gap-3 px-4 pb-3 md:pb-5" style="pointer-events:auto;">
-        <button onclick="speakActiveWord()" class="action-btn glass rounded-2xl px-5 py-3 flex items-center gap-2 font-bold text-sm text-bark">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M11 5L6 9H2v6h4l5 4V5z"/></svg>
-          Am thanh
+      <!-- Nav items -->
+      <nav class="px-3 mt-4 flex flex-col gap-1" id="sidebar-nav">
+        <button onclick="navigateTo('home')" data-nav="home" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition hover:bg-white/30">
+          <svg class="nav-icon w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+          <span class="nav-label font-bold text-sm text-brand">Trang chủ</span>
         </button>
-        <button onclick="takePhoto()" class="action-btn glass rounded-2xl px-5 py-3 flex items-center gap-2 font-bold text-sm text-bark">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
-          Chup anh
+        <button onclick="navigateTo('lessons')" data-nav="lessons" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition hover:bg-white/30">
+          <svg class="nav-icon w-5 h-5 text-bark/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <span class="nav-label font-bold text-sm text-bark/50">Kho bài học</span>
         </button>
-        <button onclick="nextWord()" class="action-btn bg-brand text-white rounded-2xl px-5 py-3 flex items-center gap-2 font-bold text-sm shadow-lg shadow-brand/30">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M6 12h12"/></svg>
-          Tu tiep
+        <button onclick="navigateTo('ar')" data-nav="ar" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition hover:bg-white/30">
+          <svg class="nav-icon w-5 h-5 text-bark/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+          <span class="nav-label font-bold text-sm text-bark/50">Thực hành AR</span>
         </button>
-      </div>
-
-      <!-- Mobile bottom navigation -->
-      <nav id="bottom-nav" class="glass-dark rounded-t-2xl">
-        <button onclick="switchTab('vocab')" class="bnav-btn active flex flex-col items-center gap-0.5 text-white" data-mob="vocab">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-          <span class="text-[10px] font-bold">Tu vung</span>
+        <button onclick="navigateTo('trophy')" data-nav="trophy" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition hover:bg-white/30">
+          <svg class="nav-icon w-5 h-5 text-bark/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+          <span class="nav-label font-bold text-sm text-bark/50">Bảng vàng</span>
         </button>
-        <button onclick="switchTab('game')" class="bnav-btn flex flex-col items-center gap-0.5 text-white/60" data-mob="game">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span class="text-[10px] font-bold">Tro choi</span>
-        </button>
-        <button onclick="switchTab('trophy')" class="bnav-btn flex flex-col items-center gap-0.5 text-white/60" data-mob="trophy">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-          <span class="text-[10px] font-bold">Thanh tich</span>
+        <button onclick="navigateTo('settings')" data-nav="settings" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition hover:bg-white/30">
+          <svg class="nav-icon w-5 h-5 text-bark/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="nav-label font-bold text-sm text-bark/50">Cài đặt</span>
         </button>
       </nav>
-    </div>
+
+      <!-- Stats bar -->
+      <div class="px-4 mt-4">
+        <div class="glass rounded-xl p-3 flex items-center justify-around">
+          <div class="text-center">
+            <p class="font-display text-lg font-bold text-brand" id="stat-words">0</p>
+            <p class="text-[9px] font-bold text-bark/40">Từ đã học</p>
+          </div>
+          <div class="w-px h-8 bg-bark/10"></div>
+          <div class="text-center">
+            <p class="font-display text-lg font-bold text-mint" id="stat-streak">1</p>
+            <p class="text-[9px] font-bold text-bark/40">Ngày liên tục</p>
+          </div>
+          <div class="w-px h-8 bg-bark/10"></div>
+          <div class="text-center">
+            <p class="font-display text-lg font-bold text-yellow-500" id="stat-stars">0</p>
+            <p class="text-[9px] font-bold text-bark/40">Ngôi sao</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar dynamic content -->
+      <div class="flex-1 overflow-y-auto px-4 pt-3 pb-4" id="sidebar-dynamic"></div>
+    </aside>
+
+
+    <!-- ======== MAIN CONTENT ======== -->
+    <main class="flex-1 flex flex-col min-h-0 relative" id="main-area">
+
+      <!-- The main content panel -->
+      <div class="flex-1 overflow-y-auto" id="main-content"></div>
+
+      <!-- Mobile bottom nav -->
+      <nav id="bottom-nav" class="glass-dark rounded-t-2xl anim-slideInB" style="z-index:100;">
+        <button onclick="navigateTo('home')" data-mob="home" class="nav-item active flex flex-col items-center gap-0.5 py-1 px-2">
+          <svg class="nav-icon w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+          <span class="nav-label text-[9px] font-bold text-brand">Trang chủ</span>
+        </button>
+        <button onclick="navigateTo('lessons')" data-mob="lessons" class="nav-item flex flex-col items-center gap-0.5 py-1 px-2">
+          <svg class="nav-icon w-5 h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <span class="nav-label text-[9px] font-bold text-white/50">Bài học</span>
+        </button>
+        <button onclick="navigateTo('ar')" data-mob="ar" class="nav-item flex flex-col items-center gap-0.5 py-1 px-2">
+          <div class="w-11 h-11 -mt-5 rounded-full bg-brand flex items-center justify-center shadow-lg shadow-brand/40">
+            <svg class="nav-icon w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+          </div>
+          <span class="nav-label text-[9px] font-bold text-white/50">AR</span>
+        </button>
+        <button onclick="navigateTo('trophy')" data-mob="trophy" class="nav-item flex flex-col items-center gap-0.5 py-1 px-2">
+          <svg class="nav-icon w-5 h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+          <span class="nav-label text-[9px] font-bold text-white/50">Bảng vàng</span>
+        </button>
+        <button onclick="navigateTo('settings')" data-mob="settings" class="nav-item flex flex-col items-center gap-0.5 py-1 px-2">
+          <svg class="nav-icon w-5 h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="nav-label text-[9px] font-bold text-white/50">Cài đặt</span>
+        </button>
+      </nav>
+    </main>
   </div>
 
-  <!-- ========== TOAST ========== -->
+
+  <!-- ======== TOAST ======== -->
   <div id="toast" class="glass-dark text-white text-sm font-bold rounded-full px-5 py-2.5"></div>
 
-  <!-- ========== PHOTO MODAL ========== -->
+  <!-- ======== PHOTO MODAL ======== -->
   <div id="photo-modal">
-    <div class="glass rounded-3xl p-5 mx-4 max-w-sm w-full text-center anim-pop">
-      <canvas id="photo-canvas" class="w-full rounded-2xl mb-3" style="display:none;"></canvas>
-      <img id="photo-preview" src="" alt="Anh da chup" class="w-full rounded-2xl mb-3" />
-      <p class="font-display text-lg font-bold text-bark">Tuyet voi! &#127881;</p>
-      <p class="text-bark/60 text-xs font-semibold mb-3">Ban da chup duoc khoanh khac AR</p>
+    <div class="glass-strong rounded-3xl p-5 mx-4 max-w-sm w-full text-center anim-pop">
+      <canvas id="photo-canvas" style="display:none;"></canvas>
+      <img id="photo-preview" src="" alt="Ảnh đã chụp" class="w-full rounded-2xl mb-3" />
+      <p class="font-display text-lg font-bold text-bark">Tuyệt vời!</p>
+      <p class="text-bark/50 text-xs font-semibold mb-3">Bạn đã chụp được khoảnh khắc AR</p>
       <div class="flex gap-2 justify-center">
-        <a id="photo-download" download="lingualand-ar.png" class="px-4 py-2 bg-teal text-white text-sm font-bold rounded-full cursor-pointer">Tai xuong</a>
-        <button onclick="closePhotoModal()" class="px-4 py-2 bg-brand text-white text-sm font-bold rounded-full cursor-pointer">Dong</button>
+        <a id="photo-download" download="lingualand-ar.png" class="action-btn px-4 py-2 bg-mint text-white text-sm font-bold rounded-full">Tải xuống</a>
+        <button onclick="closePhotoModal()" class="action-btn px-4 py-2 bg-brand text-white text-sm font-bold rounded-full">Đóng</button>
       </div>
     </div>
   </div>
 
-  <!-- ============================================================ -->
-  <!--  ALL JAVASCRIPT                                              -->
-  <!-- ============================================================ -->
+
+  <!-- ================================================================ -->
+  <!--  JAVASCRIPT                                                      -->
+  <!-- ================================================================ -->
   <script>
-    /* ======================== WORD DATA ======================== */
+    /* ======================== DATA ======================== */
 
     const WORDS = [
-      { word: 'Apple',  img: 'apple.png',  hint: 'A red fruit',       vn: 'Qua tao',       category: 'Trai cay' },
-      { word: 'Cat',    img: 'cat.png',     hint: 'Says meow',        vn: 'Con meo',        category: 'Dong vat' },
-      { word: 'Dog',    img: 'dog.png',     hint: 'Says woof',        vn: 'Con cho',        category: 'Dong vat' },
-      { word: 'Bird',   img: 'bird.png',    hint: 'Can fly',          vn: 'Con chim',       category: 'Dong vat' },
-      { word: 'Fish',   img: 'fish.png',    hint: 'Lives in water',   vn: 'Con ca',         category: 'Dong vat' },
-      { word: 'Banana', img: 'banana.png',  hint: 'Long and yellow',  vn: 'Qua chuoi',      category: 'Trai cay' },
-      { word: 'Red',    img: 'red.png',     hint: 'Color of fire',    vn: 'Mau do',         category: 'Mau sac' },
-      { word: 'Blue',   img: 'blue.png',    hint: 'Color of the sky', vn: 'Mau xanh duong', category: 'Mau sac' },
-      { word: 'Green',  img: 'green.png',   hint: 'Color of grass',   vn: 'Mau xanh la',    category: 'Mau sac' },
-      { word: 'Sun',    img: 'sun.png',     hint: 'Bright in the sky',vn: 'Mat troi',       category: 'Thien nhien' },
-      { word: 'Moon',   img: 'moon.png',    hint: 'Shines at night',  vn: 'Mat trang',      category: 'Thien nhien' },
-      { word: 'Star',   img: 'star.png',    hint: 'Twinkles at night',vn: 'Ngoi sao',       category: 'Thien nhien' },
-      { word: 'Cow',    img: 'cow.png',     hint: 'Says moo',         vn: 'Con bo',         category: 'Dong vat' },
-      { word: 'Hen',    img: 'hen.png',     hint: 'Lays eggs',        vn: 'Con ga mai',     category: 'Dong vat' },
-      { word: 'One',    img: 'one.png',     hint: 'Number 1',         vn: 'So mot',         category: 'So dem' },
-      { word: 'Two',    img: 'two.png',     hint: 'Number 2',         vn: 'So hai',         category: 'So dem' },
-      { word: 'Three',  img: 'three.png',   hint: 'Number 3',         vn: 'So ba',          category: 'So dem' },
+      { word: 'Apple',  img: 'apple.png',  hint: 'A yummy red fruit',    vn: 'Quả táo',       cat: 'Trái cây' },
+      { word: 'Banana', img: 'banana.png', hint: 'Long and yellow',      vn: 'Quả chuối',     cat: 'Trái cây' },
+      { word: 'Orange', img: 'orange.png', hint: 'Round and orange',     vn: 'Quả cam',       cat: 'Trái cây' },
+      { word: 'Cat',    img: 'cat.png',    hint: 'Says meow',            vn: 'Con mèo',       cat: 'Động vật' },
+      { word: 'Dog',    img: 'dog.png',    hint: 'Says woof',            vn: 'Con chó',        cat: 'Động vật' },
+      { word: 'Bird',   img: 'bird.png',   hint: 'Can fly high',         vn: 'Con chim',       cat: 'Động vật' },
+      { word: 'Fish',   img: 'fish.png',   hint: 'Lives in water',       vn: 'Con cá',         cat: 'Động vật' },
+      { word: 'Cow',    img: 'cow.png',    hint: 'Says moo',             vn: 'Con bò',         cat: 'Động vật' },
+      { word: 'Red',    img: 'red.png',    hint: 'Color of fire',        vn: 'Màu đỏ',        cat: 'Màu sắc' },
+      { word: 'Blue',   img: 'blue.png',   hint: 'Color of the sky',     vn: 'Màu xanh dương', cat: 'Màu sắc' },
+      { word: 'Green',  img: 'green.png',  hint: 'Color of grass',       vn: 'Màu xanh lá',   cat: 'Màu sắc' },
+      { word: 'Sun',    img: 'sun.png',    hint: 'Bright in the sky',    vn: 'Mặt trời',      cat: 'Thiên nhiên' },
+      { word: 'Moon',   img: 'moon.png',   hint: 'Shines at night',      vn: 'Mặt trăng',     cat: 'Thiên nhiên' },
+      { word: 'Star',   img: 'star.png',   hint: 'Twinkles at night',    vn: 'Ngôi sao',      cat: 'Thiên nhiên' },
+      { word: 'One',    img: 'one.png',    hint: 'Number 1',             vn: 'Số một',         cat: 'Số đếm' },
+      { word: 'Two',    img: 'two.png',    hint: 'Number 2',             vn: 'Số hai',         cat: 'Số đếm' },
+      { word: 'Three',  img: 'three.png',  hint: 'Number 3',             vn: 'Số ba',          cat: 'Số đếm' },
     ];
 
+    let currentPage = 'home';
     let activeIdx = 0;
     let learnedWords = [];
-    let currentTab = 'vocab';
+    let stars = 0;
     let streak = 1;
+    let arSceneActive = false;
+    let soundEnabled = true;
+
+    /* ======================== LANDING ======================== */
+
+    function enterDashboard() {
+      const landing = document.getElementById('landing');
+      landing.classList.add('hide');
+      setTimeout(() => {
+        landing.style.display = 'none';
+        document.getElementById('dashboard').classList.add('show');
+        navigateTo('home');
+      }, 600);
+    }
 
     /* ======================== NAVIGATION ======================== */
 
-    function switchTab(tab) {
-      currentTab = tab;
-      /* Sidebar tab buttons */
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('bg-brand', 'text-white');
-        b.classList.add('text-bark/60');
+    function navigateTo(page) {
+      currentPage = page;
+
+      // Update sidebar nav
+      document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+        const isActive = el.dataset.nav === page;
+        el.classList.toggle('active', isActive);
+        el.querySelector('.nav-icon').className = `nav-icon w-5 h-5 ${isActive ? 'text-brand' : 'text-bark/50'}`;
+        el.querySelector('.nav-label').className = `nav-label font-bold text-sm ${isActive ? 'text-brand' : 'text-bark/50'}`;
+        if (isActive) el.style.background = 'rgba(255,107,53,0.08)';
+        else el.style.background = '';
       });
-      const activeTabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-      if (activeTabBtn) {
-        activeTabBtn.classList.add('bg-brand', 'text-white');
-        activeTabBtn.classList.remove('text-bark/60');
+
+      // Update mobile nav
+      document.querySelectorAll('#bottom-nav .nav-item').forEach(el => {
+        const isActive = el.dataset.mob === page;
+        el.classList.toggle('active', isActive);
+        const icon = el.querySelector('.nav-icon');
+        const label = el.querySelector('.nav-label');
+        if (el.dataset.mob === 'ar') {
+          if (label) label.className = `nav-label text-[9px] font-bold ${isActive ? 'text-brand' : 'text-white/50'}`;
+        } else {
+          if (icon) icon.className = `nav-icon w-5 h-5 ${isActive ? 'text-brand' : 'text-white/50'}`;
+          if (label) label.className = `nav-label text-[9px] font-bold ${isActive ? 'text-brand' : 'text-white/50'}`;
+        }
+      });
+
+      // Handle AR scene
+      if (page === 'ar') {
+        activateAR();
+        document.body.style.background = 'transparent';
+      } else {
+        deactivateAR();
+        document.body.style.background = '#E8F4FD';
       }
 
-      /* Mobile nav buttons */
-      document.querySelectorAll('.bnav-btn').forEach(b => {
-        b.classList.remove('active', 'text-white');
-        b.classList.add('text-white/60');
-      });
-      const activeMob = document.querySelector(`.bnav-btn[data-mob="${tab}"]`);
-      if (activeMob) {
-        activeMob.classList.add('active', 'text-white');
-        activeMob.classList.remove('text-white/60');
+      // Render pages
+      renderSidebarContent();
+      renderMainContent();
+      updateStats();
+    }
+
+    /* ======================== AR SCENE MANAGEMENT ======================== */
+
+    function activateAR() {
+      if (arSceneActive) return;
+      arSceneActive = true;
+
+      let scene = document.getElementById('ar-scene');
+      if (scene) { scene.style.display = ''; return; }
+
+      scene = document.createElement('a-scene');
+      scene.id = 'ar-scene';
+      scene.setAttribute('embedded', '');
+      scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;');
+      scene.setAttribute('renderer', 'logarithmicDepthBuffer: true; alpha: true;');
+      scene.setAttribute('vr-mode-ui', 'enabled: false');
+      scene.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1;';
+
+      scene.innerHTML = `
+        <!-- YOUR MARKERS HERE: drop cat.png, dog.png etc. next to this HTML -->
+        <a-marker preset="hiro">
+          <a-box position="0 0.5 0" material="color: #FF6B35; opacity: 0.85;" scale="0.5 0.5 0.5"
+                 animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"></a-box>
+          <a-text value="APPLE" position="0 1.2 0" scale="1.5 1.5 1.5" color="#FF6B35" align="center"></a-text>
+        </a-marker>
+        <a-entity camera></a-entity>
+      `;
+      document.body.prepend(scene);
+    }
+
+    function deactivateAR() {
+      if (!arSceneActive) return;
+      arSceneActive = false;
+      const scene = document.getElementById('ar-scene');
+      if (scene) {
+        scene.style.display = 'none';
+        // Also hide lingering video elements
+        document.querySelectorAll('#arjs-video, video').forEach(v => v.style.display = 'none');
       }
-
-      renderSidebar();
     }
 
-    /* ======================== SIDEBAR RENDER ======================== */
+    /* ======================== SIDEBAR CONTENT ======================== */
 
-    function renderSidebar() {
-      const el = document.getElementById('sidebar-content');
-      if (currentTab === 'vocab') renderVocabTab(el);
-      else if (currentTab === 'game') renderGameTab(el);
-      else if (currentTab === 'trophy') renderTrophyTab(el);
+    function renderSidebarContent() {
+      const el = document.getElementById('sidebar-dynamic');
+      if (!el) return;
+
+      if (currentPage === 'lessons' || currentPage === 'ar') {
+        renderWordList(el);
+      } else if (currentPage === 'home') {
+        renderSidebarHome(el);
+      } else {
+        el.innerHTML = '';
+      }
     }
 
-    /* --- Vocabulary Tab --- */
-    function renderVocabTab(el) {
-      const categories = [...new Set(WORDS.map(w => w.category))];
-      let html = `<p class="text-bark/50 text-xs font-bold mb-3">&#128161; Bam vao tu de hoc nhe!</p>`;
-      categories.forEach(cat => {
-        const catWords = WORDS.filter(w => w.category === cat);
-        html += `<p class="font-display text-sm font-bold text-teal mt-3 mb-1.5">${cat}</p>`;
-        catWords.forEach((w, i) => {
-          const globalIdx = WORDS.indexOf(w);
-          const isActive = globalIdx === activeIdx;
-          const isLearned = learnedWords.includes(w.word);
+    function renderSidebarHome(el) {
+      const cats = [...new Set(WORDS.map(w => w.cat))];
+      el.innerHTML = `
+        <p class="font-display text-sm font-bold text-mint mb-2">Lộ trình học</p>
+        ${cats.map((c, i) => {
+          const catW = WORDS.filter(w => w.cat === c);
+          const done = catW.filter(w => learnedWords.includes(w.word)).length;
+          const pct = Math.round((done / catW.length) * 100);
+          return `
+            <div class="glass rounded-xl p-3 mb-2 anim-fadeUp" style="animation-delay:${i * 80}ms">
+              <div class="flex items-center justify-between mb-1.5">
+                <p class="font-bold text-xs text-bark">${c}</p>
+                <span class="text-[10px] font-bold text-bark/40">${done}/${catW.length}</span>
+              </div>
+              <div class="w-full h-2 bg-bark/5 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500" style="width:${pct}%; background: ${pct === 100 ? '#2EC4B6' : '#FF6B35'};"></div>
+              </div>
+            </div>`;
+        }).join('')}
+        <button onclick="navigateTo('lessons')" class="action-btn w-full mt-2 py-2.5 bg-brand text-white font-bold text-sm rounded-xl shadow-md shadow-brand/20">
+          Bắt đầu học
+        </button>
+      `;
+    }
+
+    function renderWordList(el) {
+      const cats = [...new Set(WORDS.map(w => w.cat))];
+      let html = '<p class="text-bark/40 text-[10px] font-bold mb-2">Bấm vào từ để học nhé!</p>';
+      cats.forEach(c => {
+        const catW = WORDS.filter(w => w.cat === c);
+        html += `<p class="font-display text-xs font-bold text-mint mt-3 mb-1">${c}</p>`;
+        catW.forEach(w => {
+          const idx = WORDS.indexOf(w);
+          const active = idx === activeIdx;
+          const learned = learnedWords.includes(w.word);
           html += `
-            <div onclick="selectWord(${globalIdx})"
-                 class="word-card flex items-center gap-3 p-2.5 rounded-xl mb-1.5 transition
-                        ${isActive ? 'active-word glass border-2 border-brand' : 'glass border border-white/30'}">
-              <img src="${w.img}" alt="${w.word}" class="w-10 h-10 rounded-lg object-contain bg-white/50 p-1"
-                   onerror="this.outerHTML='<div class=\\'w-10 h-10 rounded-lg bg-brand/10 flex items-center justify-center font-display font-bold text-brand text-lg\\'>${w.word[0]}</div>'" />
+            <div onclick="selectWord(${idx})"
+                 class="word-card flex items-center gap-2.5 p-2 rounded-xl mb-1 ${active ? 'selected glass border-2 border-brand' : 'glass border border-white/30'}">
+              <img src="${w.img}" alt="${w.word}" class="w-9 h-9 rounded-lg object-contain bg-white/50 p-1"
+                   onerror="this.outerHTML='<div class=\\'w-9 h-9 rounded-lg bg-brand/10 flex items-center justify-center font-display font-bold text-brand text-sm\\'>${w.word[0]}</div>'" />
               <div class="flex-1 min-w-0">
                 <p class="font-display font-bold text-sm leading-tight text-bark">${w.word}</p>
-                <p class="text-[10px] text-bark/50 font-semibold">${w.vn}</p>
+                <p class="text-[9px] text-bark/40 font-semibold">${w.vn}</p>
               </div>
-              ${isLearned ? '<span class="text-teal text-sm">&#10003;</span>' : ''}
-            </div>
-          `;
+              ${learned ? '<span class="text-mint text-xs font-bold">&#10003;</span>' : ''}
+            </div>`;
         });
       });
       el.innerHTML = html;
     }
 
-    /* --- Game Tab --- */
-    function renderGameTab(el) {
-      el.innerHTML = `
-        <p class="text-bark/50 text-xs font-bold mb-3">&#127918; Chon tro choi yeu thich!</p>
+    /* ======================== MAIN CONTENT RENDER ======================== */
 
-        <button onclick="startMiniQuiz()" class="word-card w-full glass border border-white/30 rounded-xl p-4 mb-2 text-left">
-          <span class="text-2xl">&#129513;</span>
-          <p class="font-display font-bold text-sm text-bark mt-1">Do vui tu vung</p>
-          <p class="text-[10px] text-bark/50 font-semibold">Chon dap an dung cho hinh anh</p>
-        </button>
+    function renderMainContent() {
+      const el = document.getElementById('main-content');
 
-        <button onclick="startSpellMini()" class="word-card w-full glass border border-white/30 rounded-xl p-4 mb-2 text-left">
-          <span class="text-2xl">&#9999;&#65039;</span>
-          <p class="font-display font-bold text-sm text-bark mt-1">Ghep chu</p>
-          <p class="text-[10px] text-bark/50 font-semibold">Sap xep cac chu cai thanh tu</p>
-        </button>
-
-        <div id="game-area" class="mt-3"></div>
-      `;
+      if (currentPage === 'home')     renderHomePage(el);
+      else if (currentPage === 'lessons')  renderLessonsPage(el);
+      else if (currentPage === 'ar')       renderARPage(el);
+      else if (currentPage === 'trophy')   renderTrophyPage(el);
+      else if (currentPage === 'settings') renderSettingsPage(el);
     }
 
-    /* --- Trophy Tab --- */
-    function renderTrophyTab(el) {
+    /* --- Home --- */
+    function renderHomePage(el) {
+      el.innerHTML = `
+        <div class="content-bg min-h-full p-4 md:p-6">
+          <div class="flex items-center gap-3 mb-5 anim-fadeUp">
+            <div class="w-12 h-12 rounded-2xl bg-brand/10 flex items-center justify-center">
+              <svg class="w-7 h-7 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <h2 class="font-display text-xl font-extrabold text-bark">Xin chào bạn nhỏ!</h2>
+              <p class="text-xs font-semibold text-bark/40">Hôm nay chúng ta học gì nhỉ?</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mb-5">
+            <button onclick="navigateTo('lessons')" class="action-btn glass-strong rounded-2xl p-4 text-left hover:shadow-lg transition anim-fadeUp" style="animation-delay:100ms">
+              <div class="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center mb-2">
+                <svg class="w-6 h-6 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              </div>
+              <p class="font-display font-bold text-sm text-bark">Kho bài học</p>
+              <p class="text-[10px] text-bark/40 font-semibold">${WORDS.length} từ vựng</p>
+            </button>
+            <button onclick="navigateTo('ar')" class="action-btn glass-strong rounded-2xl p-4 text-left hover:shadow-lg transition anim-fadeUp" style="animation-delay:200ms">
+              <div class="w-10 h-10 rounded-xl bg-mint/10 flex items-center justify-center mb-2">
+                <svg class="w-6 h-6 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+              </div>
+              <p class="font-display font-bold text-sm text-bark">Thực hành AR</p>
+              <p class="text-[10px] text-bark/40 font-semibold">Camera thực tế ảo</p>
+            </button>
+            <button onclick="startQuizFromHome()" class="action-btn glass-strong rounded-2xl p-4 text-left hover:shadow-lg transition anim-fadeUp" style="animation-delay:300ms">
+              <div class="w-10 h-10 rounded-xl bg-yellow-400/10 flex items-center justify-center mb-2">
+                <svg class="w-6 h-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              </div>
+              <p class="font-display font-bold text-sm text-bark">Đố vui</p>
+              <p class="text-[10px] text-bark/40 font-semibold">Kiểm tra từ vựng</p>
+            </button>
+            <button onclick="navigateTo('trophy')" class="action-btn glass-strong rounded-2xl p-4 text-left hover:shadow-lg transition anim-fadeUp" style="animation-delay:400ms">
+              <div class="w-10 h-10 rounded-xl bg-purple-400/10 flex items-center justify-center mb-2">
+                <svg class="w-6 h-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+              </div>
+              <p class="font-display font-bold text-sm text-bark">Bảng vàng</p>
+              <p class="text-[10px] text-bark/40 font-semibold">Thành tích của bạn</p>
+            </button>
+          </div>
+
+          <div class="glass-strong rounded-2xl p-4 anim-fadeUp" style="animation-delay:500ms">
+            <p class="font-display font-bold text-sm text-bark mb-2">Từ vựng hôm nay</p>
+            <div class="flex gap-2 overflow-x-auto pb-2">
+              ${WORDS.slice(0, 6).map((w, i) => `
+                <button onclick="navigateTo('lessons'); setTimeout(() => selectWord(${i}), 100)"
+                        class="action-btn flex-shrink-0 glass rounded-xl p-3 text-center min-w-[80px] hover:shadow transition">
+                  <img src="${w.img}" alt="${w.word}" class="w-10 h-10 mx-auto rounded-lg object-contain bg-white/50 p-1 mb-1"
+                       onerror="this.outerHTML='<div class=\\'w-10 h-10 mx-auto rounded-lg bg-brand/10 flex items-center justify-center font-display font-bold text-brand\\'>${w.word[0]}</div>'" />
+                  <p class="font-display font-bold text-xs text-bark">${w.word}</p>
+                  <p class="text-[9px] text-bark/40 font-semibold">${w.vn}</p>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    /* --- Lessons (Kho bài học) --- */
+    function renderLessonsPage(el) {
+      const w = WORDS[activeIdx];
+      el.innerHTML = `
+        <div class="content-bg min-h-full p-4 md:p-6 flex flex-col">
+          <div class="flex items-center justify-between mb-4 anim-fadeUp">
+            <div>
+              <h2 class="font-display text-lg font-extrabold text-bark">Kho báu từ vựng</h2>
+              <p class="text-[10px] text-bark/40 font-bold">Đã học ${learnedWords.length}/${WORDS.length} từ</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="speakWord()" class="action-btn glass rounded-xl px-3 py-2 flex items-center gap-1.5 text-xs font-bold text-bark">
+                <svg class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M11 5L6 9H2v6h4l5 4V5z"/></svg>
+                Âm thanh
+              </button>
+            </div>
+          </div>
+
+          <!-- Active word card -->
+          <div class="flex-1 flex items-center justify-center">
+            <div class="glass-strong rounded-3xl p-8 text-center max-w-sm w-full anim-pop shadow-xl" id="lesson-card">
+              <img src="${w.img}" alt="${w.word}" class="w-32 h-32 object-contain mx-auto mb-4 rounded-2xl bg-white/60 p-3"
+                   onerror="this.outerHTML='<div class=\\'w-32 h-32 mx-auto mb-4 rounded-2xl bg-brand/10 flex items-center justify-center font-display text-5xl font-bold text-brand\\'>${w.word[0]}</div>'" />
+              <h2 class="font-display text-4xl font-extrabold text-brand">${w.word}</h2>
+              <p class="text-sm font-semibold text-bark/50 mt-1">${w.hint}</p>
+              <p class="text-xs font-bold text-mint mt-1">${w.vn}</p>
+              <p class="text-[10px] text-bark/30 font-bold mt-1">${w.cat}</p>
+            </div>
+          </div>
+
+          <!-- Navigation -->
+          <div class="flex items-center justify-center gap-3 mt-4 anim-fadeUp" style="animation-delay:200ms">
+            <button onclick="prevWord()" class="action-btn glass rounded-2xl px-4 py-2.5 font-bold text-sm text-bark">
+              <svg class="w-5 h-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              Trước
+            </button>
+            <span class="text-xs font-bold text-bark/30">${activeIdx + 1} / ${WORDS.length}</span>
+            <button onclick="nextWord()" class="action-btn bg-brand text-white rounded-2xl px-4 py-2.5 font-bold text-sm shadow-lg shadow-brand/25">
+              Tiếp
+              <svg class="w-5 h-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>`;
+    }
+
+    /* --- AR Page --- */
+    function renderARPage(el) {
+      const w = WORDS[activeIdx];
+      el.innerHTML = `
+        <div class="min-h-full flex flex-col">
+          <!-- Floating AR header -->
+          <div class="glass mx-3 mt-3 rounded-2xl px-4 py-3 flex items-center justify-between anim-fadeUp" style="z-index:50;">
+            <div>
+              <h2 class="font-display text-sm font-extrabold text-bark">Thực hành AR</h2>
+              <p class="text-[9px] text-bark/40 font-bold">Hướng camera vào marker Hiro</p>
+            </div>
+            <div class="flex gap-1.5">
+              <span class="glass text-[10px] font-bold text-bark px-2 py-1 rounded-full">${w.word}</span>
+              <span class="glass text-[10px] font-bold text-mint px-2 py-1 rounded-full">${w.vn}</span>
+            </div>
+          </div>
+
+          <!-- AR view is the camera behind this -->
+          <div class="flex-1 flex items-end justify-center pb-3" style="z-index:50;">
+            <div class="flex items-center gap-2.5">
+              <button onclick="speakWord()" class="action-btn glass rounded-2xl px-4 py-2.5 flex items-center gap-2 font-bold text-sm text-bark shadow-lg">
+                <svg class="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M11 5L6 9H2v6h4l5 4V5z"/></svg>
+                Âm thanh
+              </button>
+              <button onclick="takePhoto()" class="action-btn glass rounded-2xl px-4 py-2.5 flex items-center gap-2 font-bold text-sm text-bark shadow-lg">
+                <svg class="w-5 h-5 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+                Chụp ảnh
+              </button>
+              <button onclick="nextWord()" class="action-btn bg-brand text-white rounded-2xl px-4 py-2.5 flex items-center gap-2 font-bold text-sm shadow-lg shadow-brand/30">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M6 12h12"/></svg>
+                Từ tiếp
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    /* --- Trophy (Bảng vàng) --- */
+    function renderTrophyPage(el) {
       const total = WORDS.length;
       const learned = learnedWords.length;
       const pct = Math.round((learned / total) * 100);
       el.innerHTML = `
-        <p class="text-bark/50 text-xs font-bold mb-3">&#127942; Thanh tich cua ban</p>
+        <div class="content-bg min-h-full p-4 md:p-6">
+          <h2 class="font-display text-lg font-extrabold text-bark mb-4 anim-fadeUp">Bảng vàng</h2>
 
-        <div class="glass border border-white/30 rounded-xl p-4 mb-3 text-center">
-          <p class="font-display text-3xl font-extrabold text-brand">${learned}<span class="text-lg text-bark/40">/${total}</span></p>
-          <p class="text-xs font-bold text-bark/50">Tu da hoc</p>
-          <div class="w-full h-2.5 bg-white/40 rounded-full mt-2 overflow-hidden">
-            <div class="h-full rounded-full bg-brand transition-all" style="width:${pct}%"></div>
+          <div class="glass-strong rounded-2xl p-5 mb-4 text-center anim-fadeUp" style="animation-delay:100ms">
+            <p class="font-display text-4xl font-extrabold text-brand">${learned}<span class="text-xl text-bark/30">/${total}</span></p>
+            <p class="text-xs font-bold text-bark/40 mb-2">Từ đã học</p>
+            <div class="w-full h-3 bg-bark/5 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-700" style="width:${pct}%; background: linear-gradient(90deg, #FF6B35, #2EC4B6);"></div>
+            </div>
           </div>
-        </div>
 
-        <div class="grid grid-cols-2 gap-2 mb-3">
-          <div class="glass border border-white/30 rounded-xl p-3 text-center">
-            <p class="text-2xl">&#128293;</p>
-            <p class="font-display text-xl font-bold text-brand">${streak}</p>
-            <p class="text-[10px] font-bold text-bark/50">Ngay lien tuc</p>
+          <div class="grid grid-cols-3 gap-2 mb-4">
+            <div class="glass-strong rounded-xl p-3 text-center anim-fadeUp" style="animation-delay:200ms">
+              <p class="font-display text-2xl font-bold text-brand">${streak}</p>
+              <p class="text-[9px] font-bold text-bark/40">Ngày liên tục</p>
+            </div>
+            <div class="glass-strong rounded-xl p-3 text-center anim-fadeUp" style="animation-delay:300ms">
+              <p class="font-display text-2xl font-bold text-yellow-500">${stars}</p>
+              <p class="text-[9px] font-bold text-bark/40">Ngôi sao</p>
+            </div>
+            <div class="glass-strong rounded-xl p-3 text-center anim-fadeUp" style="animation-delay:400ms">
+              <p class="font-display text-2xl font-bold text-mint">${pct}%</p>
+              <p class="text-[9px] font-bold text-bark/40">Hoàn thành</p>
+            </div>
           </div>
-          <div class="glass border border-white/30 rounded-xl p-3 text-center">
-            <p class="text-2xl">&#11088;</p>
-            <p class="font-display text-xl font-bold text-teal">${learned >= 5 ? '1' : '0'}</p>
-            <p class="text-[10px] font-bold text-bark/50">Huy hieu</p>
-          </div>
-        </div>
 
-        <p class="font-display text-sm font-bold text-teal mt-3 mb-1.5">Huy hieu</p>
-        <div class="glass border border-white/30 rounded-xl p-3 flex items-center gap-3 mb-1.5 ${learned >= 3 ? '' : 'opacity-40'}">
-          <span class="text-2xl">&#128218;</span>
-          <div>
-            <p class="font-bold text-xs text-bark">Nguoi kham pha</p>
-            <p class="text-[10px] text-bark/50 font-semibold">Hoc 3 tu dau tien</p>
+          <p class="font-display text-sm font-bold text-bark mb-2">Huy hiệu</p>
+          <div class="flex flex-col gap-2 mb-4">
+            ${renderBadge('Người khám phá', 'Học 3 từ đầu tiên', learned >= 3, '#FF6B35')}
+            ${renderBadge('Học sinh giỏi', 'Học 5 từ', learned >= 5, '#2EC4B6')}
+            ${renderBadge('Nhà vô địch', 'Học 10 từ', learned >= 10, '#FFD700')}
+            ${renderBadge('Bậc thầy', 'Học tất cả ${total} từ', learned >= total, '#9F7AEA')}
           </div>
-          ${learned >= 3 ? '<span class="ml-auto text-teal text-xs font-bold">&#10003;</span>' : ''}
-        </div>
-        <div class="glass border border-white/30 rounded-xl p-3 flex items-center gap-3 mb-1.5 ${learned >= 5 ? '' : 'opacity-40'}">
-          <span class="text-2xl">&#11088;</span>
-          <div>
-            <p class="font-bold text-xs text-bark">Hoc sinh gioi</p>
-            <p class="text-[10px] text-bark/50 font-semibold">Hoc 5 tu</p>
-          </div>
-          ${learned >= 5 ? '<span class="ml-auto text-teal text-xs font-bold">&#10003;</span>' : ''}
-        </div>
-        <div class="glass border border-white/30 rounded-xl p-3 flex items-center gap-3 mb-1.5 ${learned >= 10 ? '' : 'opacity-40'}">
-          <span class="text-2xl">&#127942;</span>
-          <div>
-            <p class="font-bold text-xs text-bark">Nha vo dich</p>
-            <p class="text-[10px] text-bark/50 font-semibold">Hoc 10 tu</p>
-          </div>
-          ${learned >= 10 ? '<span class="ml-auto text-teal text-xs font-bold">&#10003;</span>' : ''}
-        </div>
 
-        <p class="font-display text-sm font-bold text-teal mt-3 mb-1.5">Tu da hoc</p>
-        <div class="flex flex-wrap gap-1.5">
-          ${learnedWords.map(w => `<span class="glass text-xs font-bold text-bark px-2.5 py-1 rounded-full border border-white/30">${w}</span>`).join('')}
-          ${learnedWords.length === 0 ? '<p class="text-bark/30 text-xs font-semibold">Chua co tu nao</p>' : ''}
-        </div>
-      `;
+          <p class="font-display text-sm font-bold text-bark mb-2">Từ đã học</p>
+          <div class="flex flex-wrap gap-1.5">
+            ${learnedWords.length ? learnedWords.map(w => `<span class="glass-strong text-xs font-bold text-bark px-2.5 py-1 rounded-full">${w}</span>`).join('') : '<p class="text-bark/30 text-xs font-semibold">Chưa có từ nào</p>'}
+          </div>
+        </div>`;
     }
 
-    /* ======================== WORD SELECTION ======================== */
+    function renderBadge(title, desc, unlocked, color) {
+      return `
+        <div class="glass-strong rounded-xl p-3 flex items-center gap-3 ${unlocked ? '' : 'opacity-35'} anim-fadeUp">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background:${color}20;">
+            <svg class="w-5 h-5" style="color:${color}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-xs text-bark">${title}</p>
+            <p class="text-[10px] text-bark/40 font-semibold">${desc}</p>
+          </div>
+          ${unlocked ? '<span class="text-mint font-bold text-xs">&#10003;</span>' : '<span class="text-bark/20 text-xs">&#128274;</span>'}
+        </div>`;
+    }
+
+    /* --- Settings (Cài đặt) --- */
+    function renderSettingsPage(el) {
+      el.innerHTML = `
+        <div class="content-bg min-h-full p-4 md:p-6">
+          <h2 class="font-display text-lg font-extrabold text-bark mb-4 anim-fadeUp">Cài đặt</h2>
+
+          <div class="flex flex-col gap-3">
+            <div class="glass-strong rounded-xl p-4 flex items-center justify-between anim-fadeUp" style="animation-delay:100ms">
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M11 5L6 9H2v6h4l5 4V5z"/></svg>
+                <div>
+                  <p class="font-bold text-sm text-bark">Âm thanh</p>
+                  <p class="text-[10px] text-bark/40 font-semibold">Phát âm khi chọn từ</p>
+                </div>
+              </div>
+              <button onclick="toggleSound()" id="sound-toggle"
+                      class="w-12 h-7 rounded-full transition-all relative ${soundEnabled ? 'bg-mint' : 'bg-bark/20'}">
+                <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow ${soundEnabled ? 'left-6' : 'left-1'}"></div>
+              </button>
+            </div>
+
+            <div class="glass-strong rounded-xl p-4 flex items-center justify-between anim-fadeUp" style="animation-delay:200ms">
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <div>
+                  <p class="font-bold text-sm text-bark">Đặt lại tiến trình</p>
+                  <p class="text-[10px] text-bark/40 font-semibold">Xóa toàn bộ dữ liệu đã học</p>
+                </div>
+              </div>
+              <button onclick="resetProgress()" class="action-btn px-3 py-1.5 bg-red-400/10 text-red-500 text-xs font-bold rounded-lg">Đặt lại</button>
+            </div>
+
+            <div class="glass-strong rounded-xl p-4 anim-fadeUp" style="animation-delay:300ms">
+              <div class="flex items-center gap-3 mb-2">
+                <svg class="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="font-bold text-sm text-bark">Thông tin</p>
+              </div>
+              <p class="text-xs text-bark/50 font-semibold leading-relaxed">
+                LinguaLand - Ứng dụng học tiếng Anh cho học sinh lớp 1 với công nghệ thực tế tăng cường (AR).
+                Được thiết kế thân thiện, vui nhộn và dễ sử dụng.
+              </p>
+              <p class="text-[10px] text-bark/30 font-bold mt-2">Phiên bản 1.0</p>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    /* ======================== WORD ACTIONS ======================== */
 
     function selectWord(idx) {
       activeIdx = idx;
       const w = WORDS[idx];
       markLearned(w.word);
-      showActiveCard(w);
-      speak(w.word);
-      renderSidebar();
-      updateBadges();
+      if (soundEnabled) speak(w.word);
+      renderSidebarContent();
+      renderMainContent();
+      updateStats();
     }
 
     function nextWord() {
@@ -507,91 +873,168 @@
       selectWord(activeIdx);
     }
 
-    function showActiveCard(w) {
-      const card = document.getElementById('active-card');
-      card.classList.remove('hidden');
-      card.classList.add('anim-pop');
-      document.getElementById('active-img').src = w.img;
-      document.getElementById('active-img').alt = w.word;
-      document.getElementById('active-img').style.display = '';
-      document.getElementById('active-word').textContent = w.word;
-      document.getElementById('active-hint').textContent = w.hint;
-      document.getElementById('active-vn').textContent = w.vn;
-      setTimeout(() => card.classList.remove('anim-pop'), 500);
+    function prevWord() {
+      activeIdx = (activeIdx - 1 + WORDS.length) % WORDS.length;
+      selectWord(activeIdx);
+    }
+
+    function speakWord() {
+      speak(WORDS[activeIdx].word);
     }
 
     function markLearned(word) {
       if (!learnedWords.includes(word)) {
         learnedWords.push(word);
+        stars += 1;
       }
     }
 
-    function updateBadges() {
-      document.getElementById('words-badge').innerHTML = `&#128218; ${learnedWords.length}`;
-      document.getElementById('streak-badge').innerHTML = `&#128293; ${streak}`;
+    function updateStats() {
+      const sw = document.getElementById('stat-words');
+      const ss = document.getElementById('stat-streak');
+      const st = document.getElementById('stat-stars');
+      if (sw) sw.textContent = learnedWords.length;
+      if (ss) ss.textContent = streak;
+      if (st) st.textContent = stars;
     }
 
     /* ======================== SPEAK ======================== */
 
     function speak(text) {
+      if (!soundEnabled) return;
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'en-US';
-        u.rate = 0.8;
-        u.pitch = 1.15;
+        u.rate = 0.75;
+        u.pitch = 1.2;
         window.speechSynthesis.speak(u);
       }
     }
 
-    function speakActiveWord() {
-      const w = WORDS[activeIdx];
-      speak(w.word);
-      const btn = document.querySelector('.action-btn');
-      btn.classList.add('anim-shake');
-      setTimeout(() => btn.classList.remove('anim-shake'), 500);
-    }
-
-    /* ======================== TAKE PHOTO ======================== */
+    /* ======================== PHOTO ======================== */
 
     function takePhoto() {
       const video = document.querySelector('#arjs-video') || document.querySelector('video');
-      if (!video) {
-        showToast('Camera chua san sang!');
-        return;
-      }
+      if (!video || !video.videoWidth) { showToast('Camera chưa sẵn sàng!'); return; }
 
       const canvas = document.getElementById('photo-canvas');
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
-
-      /* Draw the video frame */
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      /* Overlay: active word watermark */
       const w = WORDS[activeIdx];
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.fillRect(0, canvas.height - 70, canvas.width, 70);
-      ctx.font = 'bold 32px Baloo 2, Nunito, sans-serif';
+      ctx.font = 'bold 28px Baloo 2, Nunito, sans-serif';
       ctx.fillStyle = '#FF6B35';
       ctx.textAlign = 'center';
-      ctx.fillText(w.word + '  -  ' + w.vn, canvas.width / 2, canvas.height - 28);
-      ctx.font = 'bold 14px Nunito, sans-serif';
+      ctx.fillText(w.word + '  -  ' + w.vn, canvas.width / 2, canvas.height - 30);
+      ctx.font = 'bold 12px Nunito, sans-serif';
       ctx.fillStyle = '#ffffff';
-      ctx.fillText('LinguaLand AR', canvas.width / 2, canvas.height - 8);
+      ctx.fillText('LinguaLand AR', canvas.width / 2, canvas.height - 10);
 
-      /* Show in modal */
       const dataUrl = canvas.toDataURL('image/png');
       document.getElementById('photo-preview').src = dataUrl;
       document.getElementById('photo-download').href = dataUrl;
       document.getElementById('photo-modal').classList.add('open');
-
-      showToast('Da chup anh! &#127881;');
+      showToast('Đã chụp ảnh!');
     }
 
     function closePhotoModal() {
       document.getElementById('photo-modal').classList.remove('open');
+    }
+
+    /* ======================== GAMES ======================== */
+
+    function startQuizFromHome() {
+      navigateTo('lessons');
+      setTimeout(() => {
+        const el = document.getElementById('main-content');
+        startQuizGame(el);
+      }, 150);
+    }
+
+    function startQuizGame(el) {
+      const shuffled = shuffle([...WORDS]);
+      let round = 0, score = 0;
+
+      function render() {
+        if (round >= 5) {
+          const earnedStars = score;
+          stars += earnedStars;
+          el.innerHTML = `
+            <div class="content-bg min-h-full flex items-center justify-center p-4">
+              <div class="glass-strong rounded-3xl p-8 text-center max-w-xs w-full anim-pop shadow-xl">
+                <p class="text-5xl mb-3">${score >= 4 ? '&#127881;' : '&#128170;'}</p>
+                <p class="font-display text-2xl font-extrabold text-brand">${score}/5 đúng!</p>
+                <p class="text-sm text-bark/50 font-semibold mb-1">${score >= 4 ? 'Giỏi quá!' : 'Cố gắng thêm nhé!'}</p>
+                <p class="text-xs text-yellow-500 font-bold mb-4">+${earnedStars} ngôi sao</p>
+                <div class="flex gap-2 justify-center">
+                  <button onclick="startQuizGame(document.getElementById('main-content'))" class="action-btn px-4 py-2 bg-brand text-white text-sm font-bold rounded-full shadow">Chơi lại</button>
+                  <button onclick="navigateTo('lessons')" class="action-btn px-4 py-2 glass text-sm font-bold text-bark rounded-full">Về bài học</button>
+                </div>
+              </div>
+            </div>`;
+          updateStats();
+          return;
+        }
+        const w = shuffled[round];
+        const wrongs = shuffle(WORDS.filter(x => x.word !== w.word)).slice(0, 2);
+        const opts = shuffle([w, ...wrongs]);
+
+        el.innerHTML = `
+          <div class="content-bg min-h-full flex items-center justify-center p-4">
+            <div class="glass-strong rounded-3xl p-6 text-center max-w-xs w-full anim-fadeUp shadow-xl">
+              <p class="text-bark/30 text-[10px] font-bold mb-2">Câu ${round + 1}/5</p>
+              <img src="${w.img}" alt="?" class="w-24 h-24 object-contain mx-auto rounded-2xl bg-white/50 p-3 mb-3"
+                   onerror="this.outerHTML='<div class=\\'w-24 h-24 mx-auto mb-3 rounded-2xl bg-brand/10 flex items-center justify-center font-display text-3xl font-bold text-brand\\'>${w.hint}</div>'" />
+              <p class="text-xs text-bark/50 font-semibold mb-3">${w.hint}</p>
+              <div class="flex flex-col gap-2" id="quiz-opts-main"></div>
+            </div>
+          </div>`;
+
+        const optsEl = document.getElementById('quiz-opts-main');
+        opts.forEach(o => {
+          const btn = document.createElement('button');
+          btn.className = 'action-btn w-full py-2.5 rounded-xl glass font-display font-bold text-sm text-bark border border-white/30 transition hover:border-brand';
+          btn.textContent = o.word;
+          btn.onclick = function() {
+            optsEl.querySelectorAll('button').forEach(b => b.disabled = true);
+            if (o.word === w.word) {
+              score++; markLearned(w.word);
+              btn.style.background = '#2EC4B6'; btn.style.color = '#fff'; btn.style.borderColor = '#2EC4B6';
+              speak('Correct! ' + w.word);
+            } else {
+              btn.style.background = '#FF6B6B'; btn.style.color = '#fff'; btn.style.borderColor = '#FF6B6B';
+              speak('The answer is ' + w.word);
+            }
+            setTimeout(() => { round++; render(); }, 1200);
+          };
+          optsEl.appendChild(btn);
+        });
+      }
+      render();
+    }
+
+    /* ======================== SETTINGS ACTIONS ======================== */
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      navigateTo('settings');
+      showToast(soundEnabled ? 'Đã bật âm thanh' : 'Đã tắt âm thanh');
+    }
+
+    function resetProgress() {
+      if (confirm('Bạn có chắc muốn đặt lại toàn bộ tiến trình?')) {
+        learnedWords = [];
+        stars = 0;
+        activeIdx = 0;
+        navigateTo('settings');
+        updateStats();
+        showToast('Đã đặt lại tiến trình');
+      }
     }
 
     /* ======================== TOAST ======================== */
@@ -601,151 +1044,6 @@
       t.innerHTML = msg;
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 2500);
-    }
-
-    /* ======================== MINI QUIZ GAME ======================== */
-
-    function startMiniQuiz() {
-      const area = document.getElementById('game-area');
-      const shuffled = shuffle([...WORDS]);
-      let round = 0;
-      let score = 0;
-
-      function render() {
-        if (round >= 5) {
-          area.innerHTML = `
-            <div class="glass border border-white/30 rounded-xl p-5 text-center anim-fadeIn">
-              <p class="text-3xl mb-2">${score >= 4 ? '&#127881;' : '&#128170;'}</p>
-              <p class="font-display text-lg font-bold text-brand">${score}/5 dung!</p>
-              <p class="text-xs text-bark/50 font-semibold mb-3">${score >= 4 ? 'Gioi qua!' : 'Co gang them nhe!'}</p>
-              <button onclick="renderGameTab(document.getElementById('sidebar-content'))" class="px-4 py-1.5 bg-brand text-white text-xs font-bold rounded-full cursor-pointer">Choi lai</button>
-            </div>`;
-          return;
-        }
-        const w = shuffled[round];
-        const wrongs = shuffle(WORDS.filter(x => x.word !== w.word)).slice(0, 2);
-        const opts = shuffle([w, ...wrongs]);
-
-        area.innerHTML = `
-          <div class="glass border border-white/30 rounded-xl p-4 text-center anim-fadeIn">
-            <p class="text-bark/40 text-[10px] font-bold mb-1">Cau ${round + 1}/5</p>
-            <img src="${w.img}" alt="?" class="w-20 h-20 object-contain mx-auto rounded-xl bg-white/40 p-2 mb-2"
-                 onerror="this.outerHTML='<div class=\\'font-display text-3xl font-bold text-brand mb-2\\'>${w.hint}</div>'" />
-            <p class="text-xs text-bark/60 font-semibold mb-2">${w.hint}</p>
-            <div class="flex flex-col gap-1.5" id="quiz-opts"></div>
-          </div>`;
-
-        const optsEl = document.getElementById('quiz-opts');
-        opts.forEach(o => {
-          const btn = document.createElement('button');
-          btn.className = 'w-full py-2 rounded-lg glass border border-white/30 font-display font-bold text-sm text-bark cursor-pointer transition hover:border-brand';
-          btn.textContent = o.word;
-          btn.onclick = function () {
-            optsEl.querySelectorAll('button').forEach(b => b.disabled = true);
-            if (o.word === w.word) {
-              score++;
-              markLearned(w.word);
-              btn.classList.add('bg-teal', 'text-white', 'border-teal');
-              speak('Correct! ' + w.word);
-            } else {
-              btn.classList.add('bg-red-400', 'text-white', 'border-red-400');
-              speak('The answer is ' + w.word);
-            }
-            updateBadges();
-            setTimeout(() => { round++; render(); }, 1000);
-          };
-          optsEl.appendChild(btn);
-        });
-      }
-      render();
-    }
-
-    /* ======================== MINI SPELL GAME ======================== */
-
-    function startSpellMini() {
-      const area = document.getElementById('game-area');
-      const short = shuffle(WORDS.filter(w => w.word.length <= 5));
-      let round = 0;
-      let score = 0;
-
-      function render() {
-        if (round >= 4 || round >= short.length) {
-          area.innerHTML = `
-            <div class="glass border border-white/30 rounded-xl p-5 text-center anim-fadeIn">
-              <p class="text-3xl mb-2">${score >= 3 ? '&#127881;' : '&#128170;'}</p>
-              <p class="font-display text-lg font-bold text-brand">${score}/${Math.min(4, short.length)} dung!</p>
-              <button onclick="renderGameTab(document.getElementById('sidebar-content'))" class="mt-2 px-4 py-1.5 bg-brand text-white text-xs font-bold rounded-full cursor-pointer">Choi lai</button>
-            </div>`;
-          return;
-        }
-
-        const w = short[round];
-        const letters = shuffle(w.word.toUpperCase().split(''));
-        let answer = [];
-
-        function renderSpell() {
-          area.innerHTML = `
-            <div class="glass border border-white/30 rounded-xl p-4 text-center anim-fadeIn">
-              <p class="text-bark/40 text-[10px] font-bold mb-1">Cau ${round + 1}/${Math.min(4, short.length)}</p>
-              <img src="${w.img}" alt="?" class="w-16 h-16 object-contain mx-auto rounded-xl bg-white/40 p-2 mb-1"
-                   onerror="this.outerHTML='<div class=\\'font-display text-xl font-bold text-brand mb-1\\'>${w.hint}</div>'" />
-              <p class="text-xs text-bark/60 font-semibold mb-2">${w.vn}</p>
-              <div class="flex justify-center gap-1.5 mb-3" id="spell-slots"></div>
-              <div class="flex justify-center gap-1.5 flex-wrap" id="spell-letters"></div>
-              <div id="spell-fb" class="mt-2"></div>
-            </div>`;
-
-          const slotsEl = document.getElementById('spell-slots');
-          for (let i = 0; i < w.word.length; i++) {
-            const d = document.createElement('div');
-            d.className = `w-9 h-11 rounded-lg flex items-center justify-center font-display text-lg font-bold transition
-                           ${answer[i] ? 'bg-brand text-white' : 'bg-white/40 text-bark/30 border border-white/50'}`;
-            d.textContent = answer[i] || '_';
-            d.onclick = () => { if (answer[i]) { answer.splice(i, 1); renderSpell(); } };
-            slotsEl.appendChild(d);
-          }
-
-          const letEl = document.getElementById('spell-letters');
-          const used = [...answer];
-          letters.forEach(ch => {
-            const ui = used.indexOf(ch);
-            const isUsed = ui !== -1;
-            if (isUsed) used.splice(ui, 1);
-            const b = document.createElement('button');
-            b.className = `w-9 h-11 rounded-lg font-display text-lg font-bold cursor-pointer transition
-                           ${isUsed ? 'bg-white/20 text-bark/20 border border-dashed border-white/30' : 'bg-teal text-white shadow'}`;
-            b.textContent = ch;
-            b.disabled = isUsed;
-            b.onclick = () => {
-              if (answer.length < w.word.length) {
-                answer.push(ch);
-                speak(ch);
-                renderSpell();
-                if (answer.length === w.word.length) checkSpell();
-              }
-            };
-            letEl.appendChild(b);
-          });
-        }
-
-        function checkSpell() {
-          const fb = document.getElementById('spell-fb');
-          if (answer.join('') === w.word.toUpperCase()) {
-            score++;
-            markLearned(w.word);
-            fb.innerHTML = '<p class="text-teal font-bold text-xs anim-pop">Dung roi! &#127881;</p>';
-            speak('Correct! ' + w.word);
-            updateBadges();
-            setTimeout(() => { round++; render(); }, 1000);
-          } else {
-            fb.innerHTML = '<p class="text-red-400 font-bold text-xs anim-shake">Thu lai nhe!</p>';
-            setTimeout(() => { answer = []; renderSpell(); }, 700);
-          }
-        }
-
-        renderSpell();
-      }
-      render();
     }
 
     /* ======================== UTILS ======================== */
@@ -762,8 +1060,7 @@
     /* ======================== INIT ======================== */
 
     document.addEventListener('DOMContentLoaded', () => {
-      switchTab('vocab');
-      selectWord(0);
+      // Landing page is shown first, dashboard hidden
     });
   </script>
 
