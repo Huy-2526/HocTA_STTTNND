@@ -106,6 +106,14 @@ video {
 .ar-mode-active body {
     background: transparent !important;
 }
+    .a-canvas {
+    background-color: transparent !important;
+}
+
+/* Ép toàn bộ các thẻ bọc ngoài không được có màu nền */
+#arjs-video {
+    display: block !important;
+}
   </style>
 </head>
 
@@ -1085,6 +1093,16 @@ video {
       buildARWordList();
       buildSimAR();
     });
+    window.addEventListener('click', function () {
+    const video = document.querySelector('video'); // Tìm bất kỳ thẻ video nào
+    if (video) {
+        video.play().then(() => {
+            console.log("Camera đã bùng sáng!");
+        }).catch(err => {
+            console.log("Chưa bật được vì: ", err);
+        });
+    }
+});
   </script>
 
 </body>
