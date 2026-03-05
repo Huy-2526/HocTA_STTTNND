@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
@@ -47,9 +47,14 @@
     .font-display { font-family: 'Baloo 2', cursive; }
 
     /* AR video feed behind everything */
-    #arjs-video, video { position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important; object-fit: cover; z-index: -2 !important; }
-    canvas.a-canvas { position: fixed !important; top: 0; left: 0; z-index: -1 !important; }
-
+   #arjs-video {
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    object-fit: cover !important;
+    width: 100vw !important;
+    height: 100vh !important;
+}
     /* Glassmorphism */
     .glass {
       background: rgba(255,255,255,0.55);
