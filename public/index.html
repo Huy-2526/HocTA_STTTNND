@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>LinguaLand - Hoc Tieng Anh Vui</title>
   <meta name="description" content="Ung dung hoc tieng Anh cho hoc sinh lop 1 voi AR, tro choi va tu vung." />
   <meta name="theme-color" content="#FF6B35" />
@@ -47,13 +47,19 @@
     .font-display { font-family: 'Baloo 2', cursive; }
 
     /* AR video feed behind everything */
-  #arjs-video {
-    width: 100vw !important;
-    height: 100vh !important;
-    object-fit: cover !important; /* Không bị méo hình */
+ #arjs-video {
+    /* Ép về góc tuyệt đối */
     top: 0 !important;
     left: 0 !important;
     position: fixed !important;
+    
+    /* Luôn phủ kín 100% dù là máy tính hay điện thoại */
+    width: 100vw !important;
+    height: 100vh !important;
+    
+    /* Giữ tỉ lệ camera không bị móp méo */
+    object-fit: cover !important; 
+    z-index: -1 !important;
 }
     /* Glassmorphism */
     .glass {
