@@ -47,13 +47,13 @@
     .font-display { font-family: 'Baloo 2', cursive; }
 
     /* AR video feed behind everything */
-   #arjs-video {
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    object-fit: cover !important;
+  #arjs-video {
     width: 100vw !important;
     height: 100vh !important;
+    object-fit: cover !important; /* Không bị méo hình */
+    top: 0 !important;
+    left: 0 !important;
+    position: fixed !important;
 }
     /* Glassmorphism */
     .glass {
