@@ -1071,6 +1071,15 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Landing page is shown first, dashboard hidden
     });
+   function saveProgress(wordCount) {
+    const today = new Date().toISOString().split('T')[0]; // Lấy ngày định dạng YYYY-MM-DD
+    let history = JSON.parse(localStorage.getItem('linguaLand_Progress')) || {};
+    
+    // Cộng dồn số từ học được trong ngày
+    history[today] = (history[today] || 0) + wordCount;
+    
+    localStorage.setItem('linguaLand_Progress', JSON.stringify(history));
+}
   </script>
 
 </body>
