@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
@@ -38,8 +38,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- A-Frame + AR.js (loaded but scene created dynamically) -->
-  <!-- <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script> -->
-  <!-- <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script> -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; }
@@ -48,14 +48,14 @@
 
     /* AR video feed behind everything */
     /* Ép camera tự căn giữa và tràn viền trên mọi thiết bị */
-     /* #arjs-video {
+     #arjs-video {
     left: 50% !important;
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
     object-fit: cover !important;
     width: 100vw !important;
     height: 100vh !important;
-  } */
+  }
     /* Glassmorphism */
     .glass {
       background: rgba(255,255,255,0.55);
@@ -304,8 +304,7 @@
           <svg class="nav-icon w-5 h-5 text-bark/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
           <span class="nav-label font-bold text-sm text-bark/50">Kho bài học</span>
         </button>
-     <!-- Link AR removed -->
-     <!-- <a href="https://ar-hocta-sttttnd.pages.dev" 
+     <a href="https://ar-hocta-sttttnd.pages.dev" 
    class="hidden md:inline-flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 no-underline transition-all">
   
   <div class="flex items-center">
@@ -315,7 +314,7 @@
   </div>
 
   <span class="text-sm font-bold text-bark/50 leading-none translate-y-[1px]">Thực hành AR</span>
-</a> -->
+</a>
         <button onclick="navigateTo('trophy')" data-nav="trophy" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition hover:bg-white/30">
           <svg class="nav-icon w-5 h-5 text-bark/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
           <span class="nav-label font-bold text-sm text-bark/50">Bảng vàng</span>
@@ -367,8 +366,7 @@
           <svg class="nav-icon w-5 h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
           <span class="nav-label text-[9px] font-bold text-white/50">Bài học</span>
         </button>
-        <!-- AR Button removed -->
-        <!-- <a href="https://ar-hocta-sttttnd.pages.dev" data-nav="ar" class="nav-item flex flex-col items-center no-underline">
+        <a href="https://ar-hocta-sttttnd.pages.dev" data-nav="ar" class="nav-item flex flex-col items-center no-underline">
   <div class="w-11 h-11 -mt-5 rounded-full bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/40">
     <svg class="nav-icon w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
@@ -377,7 +375,7 @@
   </div>
   
   <span class="nav-label text-[9px] font-bold text-white/50 mt-1">AR</span>
-</a> -->
+</a>
         <button onclick="navigateTo('trophy')" data-mob="trophy" class="nav-item flex flex-col items-center gap-0.5 py-1 px-2">
           <svg class="nav-icon w-5 h-5 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
           <span class="nav-label text-[9px] font-bold text-white/50">Bảng vàng</span>
@@ -450,7 +448,7 @@
     let learnedWords = [];
     let stars = 0;
     let streak = 1;
-    // let arSceneActive = false; // REMOVED
+    let arSceneActive = false;
     let soundEnabled = true;
 
     /* ======================== LANDING ======================== */
@@ -486,25 +484,22 @@
         el.classList.toggle('active', isActive);
         const icon = el.querySelector('.nav-icon');
         const label = el.querySelector('.nav-label');
-        // REMOVED AR handling from mobile nav
-        // if (el.dataset.mob === 'ar') {
-        //   if (label) label.className = `nav-label text-[9px] font-bold ${isActive ? 'text-brand' : 'text-white/50'}`;
-        // } else {
+        if (el.dataset.mob === 'ar') {
+          if (label) label.className = `nav-label text-[9px] font-bold ${isActive ? 'text-brand' : 'text-white/50'}`;
+        } else {
           if (icon) icon.className = `nav-icon w-5 h-5 ${isActive ? 'text-brand' : 'text-white/50'}`;
           if (label) label.className = `nav-label text-[9px] font-bold ${isActive ? 'text-brand' : 'text-white/50'}`;
-        // }
+        }
       });
 
       // Handle AR scene
-      // REMOVED AR scene handling
-      // if (page === 'ar') {
-      //   activateAR();
-      //   document.body.style.background = 'transparent';
-      // } else {
-      //   deactivateAR();
-      //   document.body.style.background = '#E8F4FD';
-      // }
-      document.body.style.background = '#E8F4FD'; // Set default background
+      if (page === 'ar') {
+        activateAR();
+        document.body.style.background = 'transparent';
+      } else {
+        deactivateAR();
+        document.body.style.background = '#E8F4FD';
+      }
 
       // Render pages
       renderSidebarContent();
@@ -512,7 +507,45 @@
       updateStats();
     }
 
-    /* REMOVED AR SCENE MANAGEMENT FUNCTIONS: activateAR, deactivateAR, updateARImage */
+    /* ======================== AR SCENE MANAGEMENT ======================== */
+
+    function activateAR() {
+      if (arSceneActive) return;
+      arSceneActive = true;
+
+      let scene = document.getElementById('ar-scene');
+      if (scene) { scene.style.display = ''; return; }
+
+      scene = document.createElement('a-scene');
+      scene.id = 'ar-scene';
+      scene.setAttribute('embedded', '');
+      scene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;');
+      scene.setAttribute('renderer', 'logarithmicDepthBuffer: true; alpha: true;');
+      scene.setAttribute('vr-mode-ui', 'enabled: false');
+      scene.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1;';
+
+      scene.innerHTML = `
+        <!-- YOUR MARKERS HERE: drop cat.png, dog.png etc. next to this HTML -->
+        <a-marker preset="hiro">
+          <a-box position="0 0.5 0" material="color: #FF6B35; opacity: 0.85;" scale="0.5 0.5 0.5"
+                 animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"></a-box>
+          <a-text value="APPLE" position="0 1.2 0" scale="1.5 1.5 1.5" color="#FF6B35" align="center"></a-text>
+        </a-marker>
+        <a-entity camera></a-entity>
+      `;
+      document.body.prepend(scene);
+    }
+
+    function deactivateAR() {
+      if (!arSceneActive) return;
+      arSceneActive = false;
+      const scene = document.getElementById('ar-scene');
+      if (scene) {
+        scene.style.display = 'none';
+        // Also hide lingering video elements
+        document.querySelectorAll('#arjs-video, video').forEach(v => v.style.display = 'none');
+      }
+    }
 
     /* ======================== SIDEBAR CONTENT ======================== */
 
@@ -520,8 +553,7 @@
       const el = document.getElementById('sidebar-dynamic');
       if (!el) return;
 
-      // Modified to only render word list for lessons page
-      if (currentPage === 'lessons') {
+      if (currentPage === 'lessons' || currentPage === 'ar') {
         renderWordList(el);
       } else if (currentPage === 'home') {
         renderSidebarHome(el);
@@ -588,8 +620,7 @@
 
       if (currentPage === 'home')     renderHomePage(el);
       else if (currentPage === 'lessons')  renderLessonsPage(el);
-      // REMOVED AR PAGE RENDERING
-      // else if (currentPage === 'ar')       renderARPage(el);
+      else if (currentPage === 'ar')       renderARPage(el);
       else if (currentPage === 'trophy')   renderTrophyPage(el);
       else if (currentPage === 'settings') renderSettingsPage(el);
     }
@@ -694,7 +725,42 @@
         </div>`;
     }
 
-    /* REMOVED AR PAGE RENDERING AND FUNCTION: renderARPage */
+    /* --- AR Page --- */
+    function renderARPage(el) {
+      const w = WORDS[activeIdx];
+      el.innerHTML = `
+        <div class="min-h-full flex flex-col">
+          <!-- Floating AR header -->
+          <div class="glass mx-3 mt-3 rounded-2xl px-4 py-3 flex items-center justify-between anim-fadeUp" style="z-index:50;">
+            <div>
+              <h2 class="font-display text-sm font-extrabold text-bark">Thực hành AR</h2>
+              <p class="text-[9px] text-bark/40 font-bold">Hướng camera vào marker Hiro</p>
+            </div>
+            <div class="flex gap-1.5">
+              <span class="glass text-[10px] font-bold text-bark px-2 py-1 rounded-full">${w.word}</span>
+              <span class="glass text-[10px] font-bold text-mint px-2 py-1 rounded-full">${w.vn}</span>
+            </div>
+          </div>
+
+          <!-- AR view is the camera behind this -->
+          <div class="flex-1 flex items-end justify-center pb-3" style="z-index:50;">
+            <div class="flex items-center gap-2.5">
+              <button onclick="speakWord()" class="action-btn glass rounded-2xl px-4 py-2.5 flex items-center gap-2 font-bold text-sm text-bark shadow-lg">
+                <svg class="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M11 5L6 9H2v6h4l5 4V5z"/></svg>
+                Âm thanh
+              </button>
+              <button onclick="takePhoto()" class="action-btn glass rounded-2xl px-4 py-2.5 flex items-center gap-2 font-bold text-sm text-bark shadow-lg">
+                <svg class="w-5 h-5 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+                Chụp ảnh
+              </button>
+              <button onclick="nextWord()" class="action-btn bg-brand text-white rounded-2xl px-4 py-2.5 flex items-center gap-2 font-bold text-sm shadow-lg shadow-brand/30">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M6 12h12"/></svg>
+                Từ tiếp
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
 
     /* --- Trophy (Bảng vàng) --- */
     function renderTrophyPage(el) {
@@ -861,7 +927,38 @@
     }
 
     /* ======================== PHOTO ======================== */
-    // REMOVED PHOTO FUNCTIONALITY as it was tied to AR
+
+    function takePhoto() {
+      const video = document.querySelector('#arjs-video') || document.querySelector('video');
+      if (!video || !video.videoWidth) { showToast('Camera chưa sẵn sàng!'); return; }
+
+      const canvas = document.getElementById('photo-canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const w = WORDS[activeIdx];
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, canvas.height - 70, canvas.width, 70);
+      ctx.font = 'bold 28px Baloo 2, Nunito, sans-serif';
+      ctx.fillStyle = '#FF6B35';
+      ctx.textAlign = 'center';
+      ctx.fillText(w.word + '  -  ' + w.vn, canvas.width / 2, canvas.height - 30);
+      ctx.font = 'bold 12px Nunito, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('LinguaLand AR', canvas.width / 2, canvas.height - 10);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      document.getElementById('photo-preview').src = dataUrl;
+      document.getElementById('photo-download').href = dataUrl;
+      document.getElementById('photo-modal').classList.add('open');
+      showToast('Đã chụp ảnh!');
+    }
+
+    function closePhotoModal() {
+      document.getElementById('photo-modal').classList.remove('open');
+    }
 
     /* ======================== GAMES ======================== */
 
@@ -992,4 +1089,3 @@
 
 </body>
 </html>
-```
