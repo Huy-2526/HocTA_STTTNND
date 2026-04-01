@@ -400,7 +400,7 @@
       <p class="font-display text-lg font-bold text-bark">Tuyệt vời!</p>
       <p class="text-bark/50 text-xs font-semibold mb-3">Bạn đã chụp được khoảnh khắc AR</p>
       <div class="flex gap-2 justify-center">
-        <a id="photo-download" download="lingualand-ar.png" class="action-btn px-4 py-2 bg-mint text-white text-sm font-bold rounded-full">Tải xuống</a>
+        <a id="photo-download" download="lingualand-ar.jpg" class="action-btn px-4 py-2 bg-mint text-white text-sm font-bold rounded-full">Tải xuống</a>
         <button onclick="closePhotoModal()" class="action-btn px-4 py-2 bg-brand text-white text-sm font-bold rounded-full">Đóng</button>
       </div>
     </div>
@@ -414,33 +414,33 @@
     /* ======================== DATA ======================== */
 
     const WORDS = [
-      { word: 'Apple',  img: 'apple.png',  hint: 'A yummy red fruit',    vn: 'Quả táo',       cat: 'Trái cây' },
-      { word: 'Banana', img: 'banana.png', hint: 'Long and yellow',      vn: 'Quả chuối',     cat: 'Trái cây' },
-      { word: 'Orange', img: 'orange.png', hint: 'Round and orange',     vn: 'Quả cam',       cat: 'Trái cây' },
-      { word: 'Cat',    img: 'cat.png',    hint: 'Says meow',            vn: 'Con mèo',       cat: 'Động vật' },
-      { word: 'Dog',    img: 'dog.png',    hint: 'Says woof',            vn: 'Con chó',        cat: 'Động vật' },
-      { word: 'Bird',   img: 'bird.png',   hint: 'Can fly high',         vn: 'Con chim',       cat: 'Động vật' },
-      { word: 'Fish',   img: 'fish.png',   hint: 'Lives in water',       vn: 'Con cá',         cat: 'Động vật' },
-      { word: 'Cow',    img: 'cow.png',    hint: 'Says moo',             vn: 'Con bò',         cat: 'Động vật' },
-      { word: 'Red',    img: 'red.png',    hint: 'Color of fire',        vn: 'Màu đỏ',         cat: 'Màu sắc' },
-      { word: 'Blue',   img: 'blue.png',   hint: 'Color of the sky',     vn: 'Màu xanh dương', cat: 'Màu sắc' },
-      { word: 'Green',  img: 'green.png',  hint: 'Color of grass',       vn: 'Màu xanh lá',    cat: 'Màu sắc' },
-      { word: 'Sun',    img: 'sun.png',    hint: 'Bright in the sky',    vn: 'Mặt trời',       cat: 'Thiên nhiên' },
-      { word: 'Moon',   img: 'moon.png',   hint: 'Shines at night',      vn: 'Mặt trăng',      cat: 'Thiên nhiên' },
-      { word: 'Star',   img: 'star.png',   hint: 'Twinkles at night',    vn: 'Ngôi sao',       cat: 'Thiên nhiên' },
-      { word: 'One',    img: 'one.png',    hint: 'Number 1',             vn: 'Số một',         cat: 'Số đếm' },
-      { word: 'Two',    img: 'two.png',    hint: 'Number 2',             vn: 'Số hai',         cat: 'Số đếm' },
-      { word: 'Three',  img: 'three.png',  hint: 'Number 3',             vn: 'Số ba',          cat: 'Số đếm' },
-      { word: 'Four',   img: 'four.png',   hint: 'Number 4',             vn: 'Số bốn',         cat: 'Số đếm' },
-      { word: 'Five',   img: 'five.png',   hint: 'Number 5',             vn: 'Số năm',         cat: 'Số đếm' },
-      { word: 'Six',    img: 'six.png',    hint: 'Number 6',             vn: 'Số bảy',         cat: 'Số đếm' },
-      { word: 'Seven',  img: 'seven.png',  hint: 'Number 7',             vn: 'Số ba',          cat: 'Số đếm' },
-      { word: 'Eight',  img: 'eight.png',  hint: 'Number 8',             vn: 'Số tám',         cat: 'Số đếm' },
-      { word: 'Nine',  img: 'nine.png',  hint: 'Number 9',             vn: 'Số chín',          cat: 'Số đếm' },
-      { word: 'Ten',  img: 'ten.png',  hint: 'Number 10',             vn: 'Số mười',           cat: 'Số đếm' },
-      { word: 'Hello',  img: 'hello.png',  hint: 'Greetings',             vn: 'Xin chào',          cat: 'Chào hỏi' },
-      { word: 'Goodbye!',  img: 'bye.png',  hint: 'Farewells',             vn: 'Tạm biệt!',          cat: 'Lời chào tạm biệt' },
-      { word: 'Nice to meet you!',  img: 'nicetomeetyou.png',  hint: 'Introductions',             vn: 'Rất vui được gặp bạn!',          cat: 'Giới thiệu' },
+      { word: 'Apple',  img: 'apple.jpg',  hint: 'A yummy red fruit',    vn: 'Quả táo',       cat: 'Trái cây' },
+      { word: 'Banana', img: 'banana.jpg', hint: 'Long and yellow',      vn: 'Quả chuối',     cat: 'Trái cây' },
+      { word: 'Orange', img: 'orange.jpg', hint: 'Round and orange',     vn: 'Quả cam',       cat: 'Trái cây' },
+      { word: 'Cat',    img: 'cat.jpg',    hint: 'Says meow',            vn: 'Con mèo',       cat: 'Động vật' },
+      { word: 'Dog',    img: 'dog.jpg',    hint: 'Says woof',            vn: 'Con chó',        cat: 'Động vật' },
+      { word: 'Bird',   img: 'bird.jpg',   hint: 'Can fly high',         vn: 'Con chim',       cat: 'Động vật' },
+      { word: 'Fish',   img: 'fish.jpg',   hint: 'Lives in water',       vn: 'Con cá',         cat: 'Động vật' },
+      { word: 'Cow',    img: 'cow.jpg',    hint: 'Says moo',             vn: 'Con bò',         cat: 'Động vật' },
+      { word: 'Red',    img: 'red.jpg',    hint: 'Color of fire',        vn: 'Màu đỏ',         cat: 'Màu sắc' },
+      { word: 'Blue',   img: 'blue.jpg',   hint: 'Color of the sky',     vn: 'Màu xanh dương', cat: 'Màu sắc' },
+      { word: 'Green',  img: 'green.jpg',  hint: 'Color of grass',       vn: 'Màu xanh lá',    cat: 'Màu sắc' },
+      { word: 'Sun',    img: 'sun.jpg',    hint: 'Bright in the sky',    vn: 'Mặt trời',       cat: 'Thiên nhiên' },
+      { word: 'Moon',   img: 'moon.jpg',   hint: 'Shines at night',      vn: 'Mặt trăng',      cat: 'Thiên nhiên' },
+      { word: 'Star',   img: 'star.jpg',   hint: 'Twinkles at night',    vn: 'Ngôi sao',       cat: 'Thiên nhiên' },
+      { word: 'One',    img: 'one.jpg',    hint: 'Number 1',             vn: 'Số một',         cat: 'Số đếm' },
+      { word: 'Two',    img: 'two.jpg',    hint: 'Number 2',             vn: 'Số hai',         cat: 'Số đếm' },
+      { word: 'Three',  img: 'three.jpg',  hint: 'Number 3',             vn: 'Số ba',          cat: 'Số đếm' },
+      { word: 'Four',   img: 'four.jpg',   hint: 'Number 4',             vn: 'Số bốn',         cat: 'Số đếm' },
+      { word: 'Five',   img: 'five.jpg',   hint: 'Number 5',             vn: 'Số năm',         cat: 'Số đếm' },
+      { word: 'Six',    img: 'six.jpg',    hint: 'Number 6',             vn: 'Số bảy',         cat: 'Số đếm' },
+      { word: 'Seven',  img: 'seven.jpg',  hint: 'Number 7',             vn: 'Số ba',          cat: 'Số đếm' },
+      { word: 'Eight',  img: 'eight.jpg',  hint: 'Number 8',             vn: 'Số tám',         cat: 'Số đếm' },
+      { word: 'Nine',  img: 'nine.jpg',  hint: 'Number 9',             vn: 'Số chín',          cat: 'Số đếm' },
+      { word: 'Ten',  img: 'ten.jpg',  hint: 'Number 10',             vn: 'Số mười',           cat: 'Số đếm' },
+      { word: 'Hello',  img: 'hello.jpg',  hint: 'Greetings',             vn: 'Xin chào',          cat: 'Chào hỏi' },
+      { word: 'Goodbye!',  img: 'bye.jpg',  hint: 'Farewells',             vn: 'Tạm biệt!',          cat: 'Lời chào tạm biệt' },
+      { word: 'Nice to meet you!',  img: 'nicetomeetyou.jpg',  hint: 'Introductions',             vn: 'Rất vui được gặp bạn!',          cat: 'Giới thiệu' },
     ];
 
     let currentPage = 'home';
@@ -525,7 +525,7 @@
       scene.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1;';
 
       scene.innerHTML = `
-        <!-- YOUR MARKERS HERE: drop cat.png, dog.png etc. next to this HTML -->
+        <!-- YOUR MARKERS HERE: drop cat.jpg, dog.jpg etc. next to this HTML -->
         <a-marker preset="hiro">
           <a-box position="0 0.5 0" material="color: #FF6B35; opacity: 0.85;" scale="0.5 0.5 0.5"
                  animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"></a-box>
@@ -799,7 +799,7 @@
             ${renderBadge('Người khám phá', 'Học 3 từ đầu tiên', learned >= 3, '#FF6B35')}
             ${renderBadge('Học sinh giỏi', 'Học 5 từ', learned >= 5, '#2EC4B6')}
             ${renderBadge('Nhà vô địch', 'Học 10 từ', learned >= 10, '#FFD700')}
-            ${renderBadge('Bậc thầy', 'Học tất cả ${total} từ', learned >= total, '#9F7AEA')}
+            ${renderBadge('Bậc thầy', 'Học tất cả từ', learned >= total, '#9F7AEA')}
           </div>
 
           <p class="font-display text-sm font-bold text-bark mb-2">Từ đã học</p>
@@ -949,7 +949,7 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillText('LinguaLand AR', canvas.width / 2, canvas.height - 10);
 
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = canvas.toDataURL('image/jpg');
       document.getElementById('photo-preview').src = dataUrl;
       document.getElementById('photo-download').href = dataUrl;
       document.getElementById('photo-modal').classList.add('open');
