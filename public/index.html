@@ -1,24 +1,3 @@
-Để loại bỏ hoàn toàn phần AR khỏi mã, chúng ta cần thực hiện các bước sau:
-
-1.  **Xóa các script liên quan đến AR:**
-    *   Xóa dòng `<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>`.
-    *   Xóa dòng `<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>`.
-
-2.  **Xóa các CSS liên quan đến AR:**
-    *   Xóa đoạn CSS cho `#arjs-video`.
-
-3.  **Xóa logic JavaScript liên quan đến AR:**
-    *   Xóa các hàm `activateAR()`, `deactivateAR()`, và `updateARImage()`.
-    *   Xóa các biến global liên quan đến AR như `arSceneActive`.
-    *   Trong hàm `navigateTo()`, xóa đoạn code xử lý `if (page === 'ar')` và `else`.
-    *   Trong hàm `renderMainContent()`, xóa hàm `renderARPage(el)` và mọi nơi nó được gọi.
-    *   Trong phần `nav-item` (cả sidebar và bottom nav), xóa hoặc ẩn đi mục "Thực hành AR".
-
-4.  **Xóa phần tử `<a-scene>` (nếu nó có tồn tại trong HTML tĩnh, dù trong code này nó được tạo động).**
-
-Dưới đây là mã HTML đã được chỉnh sửa để loại bỏ hoàn toàn các thành phần AR:
-
-```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
